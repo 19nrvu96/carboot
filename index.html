@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Car Boot Sign</title>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Car Boot Sign</title>
 <script src="https://cdn.tailwindcss.com/3.4.5"></script>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -7,12 +7,9 @@
 #vp{--sp:20s}
 @keyframes mv{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
 @keyframes mh{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-.sv{animation:mv var(--sp) linear infinite}
-.sh{animation:mh var(--sp) linear infinite}
-@keyframes pu{0%,100%{opacity:1}50%{opacity:.7}}
-.pu{animation:pu 1.1s ease-in-out infinite}
-.hidden{display:none!important}
-input[type=range]{accent-color:#10b981;height:28px}
+.sv{animation:mv var(--sp) linear infinite}.sh{animation:mh var(--sp) linear infinite}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:.7}}.pu{animation:pu 1.1s infinite}
+.hidden{display:none!important}input[type=range]{accent-color:#10b981;height:28px}
 </style></head>
 <body class="bg-slate-900 text-white font-sans">
 
@@ -21,9 +18,11 @@ input[type=range]{accent-color:#10b981;height:28px}
 <h1 class="text-4xl sm:text-5xl font-black mb-3 text-yellow-400">&#128663; CAR BOOT SIGN</h1>
 <p class="text-slate-400 mb-8 text-sm">Turn this device into a billboard, or into your phone remote.</p>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-<button type="button" onclick="initLaptop()" class="p-6 bg-blue-600 hover:bg-blue-500 rounded-2xl shadow-xl"><span class="text-4xl block mb-2">&#128187;</span><span class="font-bold text-lg block">Laptop View</span><span class="text-xs text-blue-200 block mt-1">Faces the customers</span></button>
-<button type="button" onclick="initPhone()" class="p-6 bg-emerald-600 hover:bg-emerald-500 rounded-2xl shadow-xl"><span class="text-4xl block mb-2">&#128241;</span><span class="font-bold text-lg block">Phone Remote</span><span class="text-xs text-emerald-200 block mt-1">Uploads your deals</span></button>
-</div></div></div>
+<button type="button" id="b1" class="p-6 bg-blue-600 rounded-2xl shadow-xl"><span class="text-4xl block mb-2">&#128187;</span><span class="font-bold text-lg block">Laptop View</span><span class="text-xs text-blue-200 block mt-1">Faces the customers</span></button>
+<button type="button" id="b2" class="p-6 bg-emerald-600 rounded-2xl shadow-xl"><span class="text-4xl block mb-2">&#128241;</span><span class="font-bold text-lg block">Phone Remote</span><span class="text-xs text-emerald-200 block mt-1">Uploads your deals</span></button>
+</div>
+<p class="text-[10px] text-slate-600 mt-8">MINIMAL BUILD v2 &mdash; Open Laptop View first, then scan the QR with your phone.</p>
+</div></div>
 
 <div id="laptop" class="hidden min-h-screen flex-col justify-between bg-black relative">
 <div id="pairbox" class="absolute inset-0 bg-slate-950 flex items-center justify-center z-40 p-4">
@@ -34,7 +33,7 @@ input[type=range]{accent-color:#10b981;height:28px}
 <div class="text-[11px] text-slate-500 mb-1 uppercase font-bold">Display ID</div>
 <div class="text-xs text-yellow-400 font-mono select-all bg-slate-950 p-2.5 rounded break-all" id="pid">Generating...</div>
 <div id="pwarn" class="hidden mt-4 text-[11px] text-amber-300 bg-amber-950 border border-amber-800 rounded-lg p-2.5"></div>
-<button type="button" onclick="document.getElementById('pairbox').classList.add('hidden')" class="mt-5 text-xs text-slate-500 underline">Hide and show the board</button>
+<button type="button" id="b3" class="mt-5 text-xs text-slate-500 underline">Hide and show the board</button>
 </div></div>
 <div id="dhead" class="bg-yellow-400 text-slate-950 py-4 px-6 text-center font-black text-3xl md:text-5xl uppercase shrink-0">&#9889; CASH OR CARD ACCEPTED &#9889;</div>
 <div id="vp" class="flex-grow flex items-center justify-center overflow-hidden p-4 relative">
@@ -49,26 +48,23 @@ input[type=range]{accent-color:#10b981;height:28px}
 <div id="phone" class="hidden min-h-screen bg-slate-900 p-4 pb-16 max-w-md mx-auto">
 <header class="flex justify-between items-center mb-5 pb-4 border-b border-slate-800">
 <div><h1 class="text-xl font-black text-emerald-400">Stall Command</h1><span id="cstat" class="text-xs text-red-400 font-bold">&#9679; Disconnected</span></div>
-<button type="button" onclick="if(confirm('Reset? Export your sold log first.'))location.href=location.pathname" class="text-xs bg-slate-800 px-3 py-1.5 rounded-lg text-slate-400">Reset</button>
+<button type="button" id="b4" class="text-xs bg-slate-800 px-3 py-1.5 rounded-lg text-slate-400">Reset</button>
 </header>
-
 <div id="connbox" class="bg-slate-950 p-4 rounded-xl border border-slate-800 mb-5">
 <label for="tpid" class="block text-xs font-semibold text-slate-400 mb-1.5">Enter Laptop Display ID:</label>
-<div class="flex gap-2"><input type="text" id="tpid" autocomplete="off" autocapitalize="none" class="bg-slate-900 flex-grow min-w-0 px-3 py-2 rounded-lg font-mono text-sm border border-slate-700 text-white" placeholder="Paste Display ID"><button type="button" onclick="doConnect(null)" class="bg-emerald-600 px-4 py-2 rounded-lg text-sm font-bold shrink-0">Link</button></div>
+<div class="flex gap-2"><input type="text" id="tpid" autocomplete="off" autocapitalize="none" class="bg-slate-900 flex-grow min-w-0 px-3 py-2 rounded-lg font-mono text-sm border border-slate-700 text-white" placeholder="Paste Display ID"><button type="button" id="b5" class="bg-emerald-600 px-4 py-2 rounded-lg text-sm font-bold shrink-0">Link</button></div>
 </div>
-
 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 mb-5 space-y-4">
 <h3 class="text-xs font-bold uppercase text-slate-400">Layout &amp; Speed</h3>
 <div class="grid grid-cols-3 gap-2">
-<button type="button" onclick="setLayout('slide')" id="bl-slide" class="bg-slate-800 p-2 text-xs font-bold rounded-lg border-2 border-transparent">1 Big Deal</button>
-<button type="button" onclick="setLayout('vertical')" id="bl-vertical" class="bg-slate-800 p-2 text-xs font-bold rounded-lg border-2 border-transparent">Vertical</button>
-<button type="button" onclick="setLayout('horizontal')" id="bl-horizontal" class="bg-slate-800 p-2 text-xs font-bold rounded-lg border-2 border-transparent">Horizontal</button>
+<button type="button" id="bl-slide" class="bg-slate-800 p-2 text-xs font-bold rounded-lg border-2 border-transparent">1 Big Deal</button>
+<button type="button" id="bl-vertical" class="bg-slate-800 p-2 text-xs font-bold rounded-lg border-2 border-transparent">Vertical</button>
+<button type="button" id="bl-horizontal" class="bg-slate-800 p-2 text-xs font-bold rounded-lg border-2 border-transparent">Horizontal</button>
 </div>
-<div><label for="spd" class="flex justify-between text-xs text-slate-400 mb-1"><span>Speed:</span><span id="spdv" class="font-bold text-emerald-400">20s</span></label><input type="range" id="spd" min="5" max="45" value="20" oninput="setSpeed(this.value)" class="w-full"></div>
-<div><label for="ihead" class="block text-xs text-slate-400 mb-1.5">Header Banner:</label><input type="text" id="ihead" value="&#9889; CASH OR CARD ACCEPTED &#9889;" oninput="sendBanners()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white"></div>
-<div><label for="ifoot" class="block text-xs text-slate-400 mb-1.5">Footer Banner:</label><input type="text" id="ifoot" value="&#128165; DEALS CHANGING CONSTANTLY &#128165;" oninput="sendBanners()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white"></div>
+<div><label for="spd" class="flex justify-between text-xs text-slate-400 mb-1"><span>Speed:</span><span id="spdv" class="font-bold text-emerald-400">20s</span></label><input type="range" id="spd" min="5" max="45" value="20" class="w-full"></div>
+<div><label for="ihead" class="block text-xs text-slate-400 mb-1.5">Header Banner:</label><input type="text" id="ihead" value="&#9889; CASH OR CARD ACCEPTED &#9889;" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white"></div>
+<div><label for="ifoot" class="block text-xs text-slate-400 mb-1.5">Footer Banner:</label><input type="text" id="ifoot" value="&#128165; DEALS CHANGING CONSTANTLY &#128165;" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white"></div>
 </div>
-
 <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 mb-5 space-y-4">
 <h3 class="text-xs font-bold uppercase text-emerald-400">New Price Cut</h3>
 <div><label for="f-title" class="block text-xs text-slate-400 mb-1.5">Item Title:</label><input type="text" id="f-title" placeholder="Retro Leather Jacket" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white"></div>
@@ -81,33 +77,28 @@ input[type=range]{accent-color:#10b981;height:28px}
 <label class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-lg p-2.5"><input type="checkbox" id="f-showqty" checked class="w-4 h-4 accent-emerald-500"><span class="text-xs text-slate-300">Show countdown</span></label>
 </div>
 <div><label class="block text-xs text-slate-400 mb-1.5">Photo:</label>
-<div class="grid grid-cols-2 gap-2 mb-2">
-<button type="button" onclick="document.getElementById('f-cam').click()" class="bg-slate-800 p-2.5 text-xs font-bold rounded-lg">&#128247; Take Photo</button>
-<button type="button" onclick="document.getElementById('f-lib').click()" class="bg-slate-800 p-2.5 text-xs font-bold rounded-lg">&#128444; From Library</button>
-</div>
-<input type="file" id="f-cam" accept="image/*" capture="environment" class="hidden" onchange="pickPhoto(this)">
-<input type="file" id="f-lib" accept="image/*" class="hidden" onchange="pickPhoto(this)">
-<div id="pvwrap" class="hidden items-center gap-3 bg-slate-900 border border-slate-700 rounded-lg p-2"><img id="pvimg" alt="" class="w-14 h-14 object-cover rounded-md"><span class="text-[11px] text-emerald-400 font-bold flex-grow">Photo ready</span><button type="button" onclick="clearPhoto()" class="text-[11px] bg-slate-800 px-2.5 py-1.5 rounded-md font-bold">Remove</button></div>
+<div class="grid grid-cols-2 gap-2 mb-2"><button type="button" id="b6" class="bg-slate-800 p-2.5 text-xs font-bold rounded-lg">&#128247; Take Photo</button><button type="button" id="b7" class="bg-slate-800 p-2.5 text-xs font-bold rounded-lg">&#128444; From Library</button></div>
+<input type="file" id="f-cam" accept="image/*" capture="environment" class="hidden">
+<input type="file" id="f-lib" accept="image/*" class="hidden">
+<div id="pvwrap" class="hidden items-center gap-3 bg-slate-900 border border-slate-700 rounded-lg p-2"><img id="pvimg" alt="" class="w-14 h-14 object-cover rounded-md"><span class="text-[11px] text-emerald-400 font-bold flex-grow">Photo ready</span><button type="button" id="b8" class="text-[11px] bg-slate-800 px-2.5 py-1.5 rounded-md font-bold">Remove</button></div>
 </div>
 <div><label for="f-urg" class="block text-xs text-slate-400 mb-1.5">Urgency:</label><input type="text" id="f-urg" placeholder="Optional hype tag" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white mb-2">
 <div class="grid grid-cols-2 gap-2">
-<button type="button" onclick="setUrg('ALMOST GONE!')" class="bg-slate-800 p-2 text-xs font-bold rounded-lg">&#128293; Almost Gone</button>
-<button type="button" onclick="setUrg('LAST ONE!')" class="bg-slate-800 p-2 text-xs font-bold rounded-lg">&#9201; Last One</button>
-<button type="button" onclick="setUrg('TOP VALUE!')" class="bg-slate-800 p-2 text-xs font-bold rounded-lg">&#128142; Top Value</button>
-<button type="button" onclick="setUrg('MUST GO TODAY!')" class="bg-slate-800 p-2 text-xs font-bold rounded-lg">&#128230; Must Go</button>
+<button type="button" class="ut bg-slate-800 p-2 text-xs font-bold rounded-lg" data-u="ALMOST GONE!">&#128293; Almost Gone</button>
+<button type="button" class="ut bg-slate-800 p-2 text-xs font-bold rounded-lg" data-u="LAST ONE!">&#9201; Last One</button>
+<button type="button" class="ut bg-slate-800 p-2 text-xs font-bold rounded-lg" data-u="TOP VALUE!">&#128142; Top Value</button>
+<button type="button" class="ut bg-slate-800 p-2 text-xs font-bold rounded-lg" data-u="MUST GO TODAY!">&#128230; Must Go</button>
 </div></div>
-<button type="button" onclick="addDeal()" class="w-full bg-yellow-500 text-slate-950 font-black py-3.5 rounded-xl shadow-lg">&#10133; STREAM TO LAPTOP SCREEN</button>
+<button type="button" id="b9" class="w-full bg-yellow-500 text-slate-950 font-black py-3.5 rounded-xl shadow-lg">&#10133; STREAM TO LAPTOP SCREEN</button>
 </div>
-
 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 mb-5">
 <div class="flex justify-between items-center mb-3"><h3 class="text-xs font-bold uppercase text-slate-400">Live Active Listings</h3><span id="acount" class="text-[10px] text-slate-600 font-bold"></span></div>
 <div id="invlist" class="space-y-2"></div></div>
-
 <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 mb-5">
 <div class="flex justify-between items-center mb-1"><h3 class="text-xs font-bold uppercase text-amber-400">&#128181; Sold Today</h3><span id="stotal" class="text-sm font-black text-emerald-400">&pound;0.00</span></div>
 <p class="text-[10px] text-slate-600 mb-3">Tap any price to edit it if you bartered.</p>
 <div id="soldlist" class="space-y-2"></div>
-<div class="grid grid-cols-2 gap-2 mt-3"><button type="button" onclick="exportCsv()" class="bg-slate-800 p-2.5 text-xs font-bold rounded-lg">&#11015; Export CSV</button><button type="button" onclick="clearSold()" class="bg-slate-800 p-2.5 text-xs font-bold rounded-lg">&#128465; Clear Log</button></div>
+<div class="grid grid-cols-2 gap-2 mt-3"><button type="button" id="b10" class="bg-slate-800 p-2.5 text-xs font-bold rounded-lg">&#11015; Export CSV</button><button type="button" id="b11" class="bg-slate-800 p-2.5 text-xs font-bold rounded-lg">&#128465; Clear Log</button></div>
 </div></div>
 
 <script>
@@ -127,11 +118,9 @@ $('pid').innerText=id;
 var u=location.origin+location.pathname+'?c='+encodeURIComponent(id);
 $('qrcode').innerHTML='';
 new QRCode($('qrcode'),{text:u,width:180,height:180,correctLevel:QRCode.CorrectLevel.M});
-if(location.protocol==='file:'){$('pwarn').classList.remove('hidden');$('pwarn').innerText='Local file: QR link will not work. Type the ID manually.'}
-});
+if(location.protocol==='file:'){$('pwarn').classList.remove('hidden');$('pwarn').innerText='Local file: QR link will not work. Type the ID manually.'}});
 peer.on('connection',function(c){conn=c;c.on('open',function(){$('pairbox').classList.add('hidden');listen()});c.on('close',function(){$('pairbox').classList.remove('hidden')})});
-peer.on('error',function(e){$('pid').innerText='Error: '+e.type;$('pwarn').classList.remove('hidden');$('pwarn').innerText='PeerJS error ('+e.type+'). Needs internet for handshake.'});
-}
+peer.on('error',function(e){$('pid').innerText='Error: '+e.type;$('pwarn').classList.remove('hidden');$('pwarn').innerText='PeerJS error ('+e.type+'). Needs internet for handshake.'})}
 function initPhone(){
 if(!guard())return;
 $('setup').classList.add('hidden');$('phone').classList.remove('hidden');
@@ -139,8 +128,7 @@ var a=new URLSearchParams(location.search).get('c');
 peer=new Peer(CFG);
 peer.on('open',function(){if(a){$('tpid').value=a;setTimeout(function(){doConnect(a)},600)}});
 peer.on('error',function(e){stat('&#9679; Error: '+e.type,0)});
-setLayout(layout);render();
-}
+setLayout(layout);render()}
 function stat(h,ok){var e=$('cstat');e.innerHTML=h;e.className=ok?'text-xs text-emerald-400 font-bold':'text-xs text-red-400 font-bold'}
 function doConnect(t){
 var id=t||$('tpid').value.trim();
@@ -150,16 +138,13 @@ stat('&#9679; Connecting...',0);
 conn=peer.connect(id,{reliable:true});
 conn.on('open',function(){stat('&#9679; Connected',1);$('connbox').classList.add('hidden');setLayout(layout);setSpeed($('spd').value);sendBanners();render()});
 conn.on('close',function(){stat('&#9679; Disconnected',0);$('connbox').classList.remove('hidden')});
-conn.on('error',function(){stat('&#9679; Link failed',0)});
-}
+conn.on('error',function(){stat('&#9679; Link failed',0)})}
 function listen(){conn.on('data',function(p){
 if(!p||!p.t)return;
 if(p.t==='L'){layout=p.v;draw()}
 else if(p.t==='S'){speed=p.v;$('vp').style.setProperty('--sp',speed);if(layout==='slide')draw()}
 else if(p.t==='B'){$('dhead').textContent=p.h;$('dfoot').textContent=p.f}
-else if(p.t==='I'){inv=p.d||[];draw()}
-})}
-function setUrg(t){$('f-urg').value=t}
+else if(p.t==='I'){inv=p.d||[];draw()}})}
 function setSpeed(v){$('spdv').innerText=v+'s';speed=v+'s';send({t:'S',v:v+'s'})}
 function setLayout(m){layout=m;['slide','vertical','horizontal'].forEach(function(x){var b=$('bl-'+x);if(b)b.className=x===m?'bg-emerald-600 p-2 text-xs font-bold rounded-lg border-2 border-white':'bg-slate-800 p-2 text-xs font-bold rounded-lg border-2 border-transparent'});send({t:'L',v:m})}
 function sendBanners(){send({t:'B',h:$('ihead').value,f:$('ifoot').value})}
@@ -167,148 +152,36 @@ function pickPhoto(inp){
 if(!inp.files||!inp.files[0])return;
 var r=new FileReader();
 r.onload=function(e){var im=new Image();im.onload=function(){var c=document.createElement('canvas');var s=Math.min(1,400/im.width);c.width=im.width*s|0;c.height=im.height*s|0;c.getContext('2d').drawImage(im,0,0,c.width,c.height);photo=c.toDataURL('image/jpeg',.6);$('pvimg').src=photo;$('pvwrap').classList.remove('hidden');$('pvwrap').classList.add('flex')};im.src=e.target.result};
-r.readAsDataURL(inp.files[0]);
-}
+r.readAsDataURL(inp.files[0])}
 function clearPhoto(){photo='';$('pvwrap').classList.add('hidden');$('pvwrap').classList.remove('flex');$('f-cam').value='';$('f-lib').value=''}
 function addDeal(){
 var t=$('f-title').value.trim(),n=$('f-now').value.trim();
 if(!t||!n){alert('Need a title and a price.');return}
 inv.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),t:t,w:$('f-was').value.trim(),n:n,q:parseInt($('f-qty').value,10)||1,sq:$('f-showqty').checked,u:$('f-urg').value.trim(),im:photo});
-render();$('f-title').value='';$('f-was').value='';$('f-now').value='';$('f-urg').value='';$('f-qty').value='1';clearPhoto();
-}
+render();$('f-title').value='';$('f-was').value='';$('f-now').value='';$('f-urg').value='';$('f-qty').value='1';clearPhoto()}
 function get(id){for(var i=0;i<inv.length;i++)if(inv[i].id===id)return inv[i];return null}
 function tog(id){editId=editId===id?null:id;render()}
-function save(id){
-var o=get(id);if(!o)return;
-var t=$('e-t-'+id).value.trim(),n=$('e-n-'+id).value.trim();
-if(!t||!n){alert('Title and price required.');return}
-o.t=t;o.n=n;o.w=$('e-w-'+id).value.trim();o.u=$('e-u-'+id).value.trim();
-o.q=parseInt($('e-q-'+id).value,10)||1;o.sq=$('e-s-'+id).checked;
-editId=null;render();
-}
-function mark(id,amt){
-var o=get(id);if(!o)return;
-var c=parseFloat(o.n);
-if(isNaN(c)){alert('Price is not a number, edit it manually.');return}
-var x=Math.round((c-amt)*100)/100;
-if(x<=0){alert('That takes the price to zero or below.');return}
-if(!o.w)o.w=o.n;
-o.n=mny(x);
-if(!o.u)o.u='PRICE DROP!';
-render();
-}
-function setPrice(id){
-var o=get(id);if(!o)return;
-var r=prompt('New price for "'+o.t+'" (\u00A3):',o.n);
-if(r===null)return;
-var v=parseFloat(r);
-if(isNaN(v)||v<=0){alert('Enter a valid number.');return}
-if(!o.w)o.w=o.n;
-o.n=mny(v);render();
-}
-function sell(id){
-var k=-1;for(var i=0;i<inv.length;i++)if(inv[i].id===id){k=i;break}
-if(k<0)return;
-var o=inv[k],p=parseFloat(o.n)||0;
-sold.push({s:Date.now().toString(36)+Math.random().toString(36).slice(2,7),t:o.t,p:p,l:p,tm:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})});
-if(o.sq){o.q-=1;if(o.q<=0){inv.splice(k,1);if(editId===id)editId=null}}
-else{inv.splice(k,1);if(editId===id)editId=null}
-render();
-}
-function addQty(id){var o=get(id);if(o&&o.sq){o.q+=1;render()}}
-function del(id){
-if(!confirm('Remove this listing without logging a sale?'))return;
-for(var i=0;i<inv.length;i++)if(inv[i].id===id){inv.splice(i,1);break}
-if(editId===id)editId=null;render();
-}
-function editSold(s){
-for(var i=0;i<sold.length;i++)if(sold[i].s===s){
-var r=prompt('What did it actually sell for? (\u00A3)',sold[i].p);
-if(r===null)return;
-var v=parseFloat(r);
-if(isNaN(v)||v<0){alert('Enter a valid number.');return}
-sold[i].p=v;drawSold();return;
-}
-}
+function save(id){var o=get(id);if(!o)return;var t=$('e-t-'+id).value.trim(),n=$('e-n-'+id).value.trim();if(!t||!n){alert('Title and price required.');return}o.t=t;o.n=n;o.w=$('e-w-'+id).value.trim();o.u=$('e-u-'+id).value.trim();o.q=parseInt($('e-q-'+id).value,10)||1;o.sq=$('e-s-'+id).checked;editId=null;render()}
+function mark(id,amt){var o=get(id);if(!o)return;var c=parseFloat(o.n);if(isNaN(c)){alert('Price is not a number.');return}var x=Math.round((c-amt)*100)/100;if(x<=0){alert('Price would hit zero.');return}if(!o.w)o.w=o.n;o.n=mny(x);if(!o.u)o.u='PRICE DROP!';render()}
+function setPrice(id){var o=get(id);if(!o)return;var r=prompt('New price for "'+o.t+'" (\u00A3):',o.n);if(r===null)return;var v=parseFloat(r);if(isNaN(v)||v<=0){alert('Invalid number.');return}if(!o.w)o.w=o.n;o.n=mny(v);render()}
+function sell(id){var k=-1;for(var i=0;i<inv.length;i++)if(inv[i].id===id){k=i;break}if(k<0)return;var o=inv[k],p=parseFloat(o.n)||0;sold.push({s:Date.now().toString(36)+Math.random().toString(36).slice(2,7),t:o.t,p:p,l:p,tm:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})});if(o.sq){o.q-=1;if(o.q<=0){inv.splice(k,1);if(editId===id)editId=null}}else{inv.splice(k,1);if(editId===id)editId=null}render()}
+function del(id){if(!confirm('Remove this listing without logging a sale?'))return;for(var i=0;i<inv.length;i++)if(inv[i].id===id){inv.splice(i,1);break}if(editId===id)editId=null;render()}
+function editSold(s){for(var i=0;i<sold.length;i++)if(sold[i].s===s){var r=prompt('What did it actually sell for? (\u00A3)',sold[i].p);if(r===null)return;var v=parseFloat(r);if(isNaN(v)||v<0){alert('Invalid number.');return}sold[i].p=v;drawSold();return}}
 function undoSold(s){for(var i=0;i<sold.length;i++)if(sold[i].s===s){sold.splice(i,1);break}drawSold()}
 function clearSold(){if(confirm('Clear the entire sold list?')){sold=[];drawSold()}}
-function exportCsv(){
-if(!sold.length){alert('Nothing sold yet.');return}
-var r=['Time,Item,Listed,Sold'],tot=0;
-sold.forEach(function(x){tot+=x.p;r.push([x.tm,'"'+String(x.t).replace(/"/g,'""')+'"',x.l.toFixed(2),x.p.toFixed(2)].join(','))});
-r.push(',,TOTAL,'+tot.toFixed(2));
-var b=new Blob([r.join('\n')],{type:'text/csv;charset=utf-8;'});
-var u=URL.createObjectURL(b),a=document.createElement('a');
-a.href=u;a.download='carboot-'+new Date().toISOString().slice(0,10)+'.csv';
-document.body.appendChild(a);a.click();document.body.removeChild(a);
-setTimeout(function(){URL.revokeObjectURL(u)},1500);
-}
-function drawSold(){
-var b=$('soldlist');if(!b)return;
-var tot=0;sold.forEach(function(x){tot+=x.p});
-$('stotal').innerHTML='&pound;'+tot.toFixed(2);
-if(!sold.length){b.innerHTML='<p class="text-xs text-slate-600 italic py-3 text-center">Nothing sold yet today.</p>';return}
-b.innerHTML=sold.slice().reverse().map(function(x){
-var bt=x.p!==x.l?'<span class="text-[10px] text-amber-400 shrink-0">(was &pound;'+x.l.toFixed(2)+')</span>':'';
-return '<div class="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-lg p-2.5">'+
-'<span class="text-[10px] text-slate-500 font-mono shrink-0">'+x.tm+'</span>'+
-'<span class="text-xs text-white truncate flex-grow">'+esc(x.t)+'</span>'+bt+
-'<button type="button" onclick="editSold(\''+x.s+'\')" class="text-sm font-black text-emerald-400 underline shrink-0">&pound;'+x.p.toFixed(2)+'</button>'+
-'<button type="button" onclick="undoSold(\''+x.s+'\')" class="text-[11px] bg-slate-800 px-2 py-1 rounded font-bold shrink-0">&#8630;</button></div>';
-}).join('');
-}
-function render(){
-send({t:'I',d:inv});drawSold();
-var L=$('invlist');if(!L)return;
-if($('acount'))$('acount').innerText=inv.length+' live';
-if(!inv.length){L.innerHTML='<p class="text-xs text-slate-600 italic py-3 text-center">No active products yet.</p>';return}
-L.innerHTML=inv.map(function(o){
-var i=o.id,op=editId===i;
+function exportCsv(){if(!sold.length){alert('Nothing sold yet.');return}var r=['Time,Item,Listed,Sold'],tot=0;sold.forEach(function(x){tot+=x.p;r.push([x.tm,'"'+String(x.t).replace(/"/g,'""')+'"',x.l.toFixed(2),x.p.toFixed(2)].join(','))});r.push(',,TOTAL,'+tot.toFixed(2));var b=new Blob([r.join('\n')],{type:'text/csv;charset=utf-8;'});var u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='carboot-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(u)},1500)}
+function drawSold(){var b=$('soldlist');if(!b)return;var tot=0;sold.forEach(function(x){tot+=x.p});$('stotal').innerHTML='&pound;'+tot.toFixed(2);if(!sold.length){b.innerHTML='<p class="text-xs text-slate-600 italic py-3 text-center">Nothing sold yet today.</p>';return}b.innerHTML=sold.slice().reverse().map(function(x){var bt=x.p!==x.l?'<span class="text-[10px] text-amber-400 shrink-0">(was &pound;'+x.l.toFixed(2)+')</span>':'';return '<div class="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-lg p-2.5"><span class="text-[10px] text-slate-500 font-mono shrink-0">'+x.tm+'</span><span class="text-xs text-white truncate flex-grow">'+esc(x.t)+'</span>'+bt+'<button type="button" class="sp text-sm font-black text-emerald-400 underline shrink-0" data-s="'+x.s+'">&pound;'+x.p.toFixed(2)+'</button><button type="button" class="su text-[11px] bg-slate-800 px-2 py-1 rounded font-bold shrink-0" data-s="'+x.s+'">&#8630;</button></div>'}).join('')}
+function render(){send({t:'I',d:inv});drawSold();var L=$('invlist');if(!L)return;if($('acount'))$('acount').innerText=inv.length+' live';if(!inv.length){L.innerHTML='<p class="text-xs text-slate-600 italic py-3 text-center">No active products yet.</p>';return}
+L.innerHTML=inv.map(function(o){var i=o.id,op=editId===i;
 var wb=o.w?'<span class="text-[11px] text-slate-500 line-through ml-1">&pound;'+esc(o.w)+'</span>':'';
 var th=o.im?'<img src="'+o.im+'" alt="" class="w-11 h-11 object-cover rounded-md shrink-0">':'';
-var row='<div class="flex items-center gap-2 bg-slate-900 border border-slate-800 p-2.5 '+(op?'rounded-t-lg':'rounded-lg')+'">'+th+
-'<div class="flex-grow min-w-0"><div class="text-sm font-bold text-white truncate">'+esc(o.t)+'</div>'+
-'<div class="text-xs"><span class="text-yellow-400 font-bold">&pound;'+esc(o.n)+'</span>'+wb+'</div>'+
-'<div class="text-[10px] text-slate-500 mt-0.5">'+(o.sq?'Stock: '+o.q:'Infinite')+'</div></div>'+
-'<div class="flex flex-col gap-1 shrink-0">'+
-'<button type="button" onclick="sell(\''+i+'\')" class="bg-red-600 px-2.5 py-1.5 rounded-md text-[11px] font-black">SOLD</button>'+
-'<button type="button" onclick="tog(\''+i+'\')" class="bg-slate-700 px-2.5 py-1.5 rounded-md text-[11px] font-black">'+(op?'CLOSE':'EDIT')+'</button>'+
-'</div></div>';
+var row='<div class="flex items-center gap-2 bg-slate-900 border border-slate-800 p-2.5 '+(op?'rounded-t-lg':'rounded-lg')+'">'+th+'<div class="flex-grow min-w-0"><div class="text-sm font-bold text-white truncate">'+esc(o.t)+'</div><div class="text-xs"><span class="text-yellow-400 font-bold">&pound;'+esc(o.n)+'</span>'+wb+'</div><div class="text-[10px] text-slate-500 mt-0.5">'+(o.sq?'Stock: '+o.q:'Infinite')+'</div></div><div class="flex flex-col gap-1 shrink-0"><button type="button" class="ia bg-red-600 px-2.5 py-1.5 rounded-md text-[11px] font-black" data-a="sell" data-i="'+i+'">SOLD</button><button type="button" class="ia bg-slate-700 px-2.5 py-1.5 rounded-md text-[11px] font-black" data-a="tog" data-i="'+i+'">'+(op?'CLOSE':'EDIT')+'</button></div></div>';
 if(!op)return row;
-return row+'<div class="bg-slate-900 border border-t-0 border-slate-800 rounded-b-lg p-3 space-y-2.5">'+
-'<div class="text-[10px] text-slate-500 font-bold uppercase">Quick markdown</div>'+
-'<div class="grid grid-cols-4 gap-1.5">'+
-'<button type="button" onclick="mark(\''+i+'\',1)" class="bg-amber-600 p-2 text-[11px] font-black rounded-md">-&pound;1</button>'+
-'<button type="button" onclick="mark(\''+i+'\',2)" class="bg-amber-600 p-2 text-[11px] font-black rounded-md">-&pound;2</button>'+
-'<button type="button" onclick="mark(\''+i+'\',5)" class="bg-amber-600 p-2 text-[11px] font-black rounded-md">-&pound;5</button>'+
-'<button type="button" onclick="setPrice(\''+i+'\')" class="bg-slate-700 p-2 text-[11px] font-black rounded-md">Set</button>'+
-'</div>'+
-'<input type="text" id="e-t-'+i+'" value="'+esc(o.t)+'" placeholder="Title" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white">'+
-'<div class="grid grid-cols-2 gap-2">'+
-'<div><label class="block text-[10px] text-slate-500 mb-1">Was &pound;</label><input type="text" inputmode="decimal" id="e-w-'+i+'" value="'+esc(o.w)+'" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white"></div>'+
-'<div><label class="block text-[10px] text-yellow-400 font-bold mb-1">Now &pound;</label><input type="text" inputmode="decimal" id="e-n-'+i+'" value="'+esc(o.n)+'" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm font-bold text-yellow-400"></div>'+
-'</div>'+
-'<input type="text" id="e-u-'+i+'" value="'+esc(o.u)+'" placeholder="Urgency tag" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white">'+
-'<div class="grid grid-cols-2 gap-2 items-end">'+
-'<div><label class="block text-[10px] text-slate-500 mb-1">Stock</label><input type="number" min="1" id="e-q-'+i+'" value="'+o.q+'" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white"></div>'+
-'<label class="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-lg p-2"><input type="checkbox" id="e-s-'+i+'"'+(o.sq?' checked':'')+' class="w-4 h-4 accent-emerald-500"><span class="text-[11px] text-slate-300">Show countdown</span></label>'+
-'</div>'+
-'<div class="grid grid-cols-3 gap-2 pt-1">'+
-'<button type="button" onclick="save(\''+i+'\')" class="bg-emerald-600 p-2.5 text-xs font-black rounded-lg col-span-2">SAVE</button>'+
-'<button type="button" onclick="del(\''+i+'\')" class="bg-slate-800 p-2.5 text-xs font-black rounded-lg">DELETE</button>'+
-'</div></div>';
-}).join('');
-}
-function draw(){
-var v=$('mvert'),h=$('mhorz'),s=$('mslide'),e=$('mt');
-[v,h,s].forEach(function(x){x.classList.add('hidden');x.classList.remove('flex')});
-clearInterval(sTimer);
-if(!inv.length){e.classList.remove('hidden');return}
-e.classList.add('hidden');
+return row+'<div class="bg-slate-900 border border-t-0 border-slate-800 rounded-b-lg p-3 space-y-2.5"><div class="text-[10px] text-slate-500 font-bold uppercase">Quick markdown</div><div class="grid grid-cols-4 gap-1.5"><button type="button" class="ia bg-amber-600 p-2 text-[11px] font-black rounded-md" data-a="m1" data-i="'+i+'">-&pound;1</button><button type="button" class="ia bg-amber-600 p-2 text-[11px] font-black rounded-md" data-a="m2" data-i="'+i+'">-&pound;2</button><button type="button" class="ia bg-amber-600 p-2 text-[11px] font-black rounded-md" data-a="m5" data-i="'+i+'">-&pound;5</button><button type="button" class="ia bg-slate-700 p-2 text-[11px] font-black rounded-md" data-a="set" data-i="'+i+'">Set</button></div><input type="text" id="e-t-'+i+'" value="'+esc(o.t)+'" placeholder="Title" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white"><div class="grid grid-cols-2 gap-2"><div><label class="block text-[10px] text-slate-500 mb-1">Was &pound;</label><input type="text" inputmode="decimal" id="e-w-'+i+'" value="'+esc(o.w)+'" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white"></div><div><label class="block text-[10px] text-yellow-400 font-bold mb-1">Now &pound;</label><input type="text" inputmode="decimal" id="e-n-'+i+'" value="'+esc(o.n)+'" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm font-bold text-yellow-400"></div></div><input type="text" id="e-u-'+i+'" value="'+esc(o.u)+'" placeholder="Urgency tag" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white"><div class="grid grid-cols-2 gap-2 items-end"><div><label class="block text-[10px] text-slate-500 mb-1">Stock</label><input type="number" min="1" id="e-q-'+i+'" value="'+o.q+'" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white"></div><label class="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-lg p-2"><input type="checkbox" id="e-s-'+i+'"'+(o.sq?' checked':'')+' class="w-4 h-4 accent-emerald-500"><span class="text-[11px] text-slate-300">Show countdown</span></label></div><div class="grid grid-cols-3 gap-2 pt-1"><button type="button" class="ia bg-emerald-600 p-2.5 text-xs font-black rounded-lg col-span-2" data-a="save" data-i="'+i+'">SAVE</button><button type="button" class="ia bg-slate-800 p-2.5 text-xs font-black rounded-lg" data-a="del" data-i="'+i+'">DELETE</button></div></div>'}).join('')}
+function draw(){var v=$('mvert'),h=$('mhorz'),s=$('mslide'),e=$('mt');[v,h,s].forEach(function(x){x.classList.add('hidden');x.classList.remove('flex')});clearInterval(sTimer);if(!inv.length){e.classList.remove('hidden');return}e.classList.add('hidden');
 if(layout==='vertical'){v.classList.remove('hidden');v.classList.add('flex');var a=inv.map(function(x){return card(x,'vertical')}).join('');$('vtrack').innerHTML=a+a}
 else if(layout==='horizontal'){h.classList.remove('hidden');h.classList.add('flex');var b=inv.map(function(x){return card(x,'horizontal')}).join('');$('htrack').innerHTML=b+b}
-else{s.classList.remove('hidden');s.classList.add('flex');slideshow()}
-}
+else{s.classList.remove('hidden');s.classList.add('flex');slideshow()}}
 function card(o,m){
 var w=m==='horizontal'?'w-80 md:w-96 flex-shrink-0':(m==='slide'?'w-full max-w-3xl mx-auto':'w-full');
 var ts=m==='slide'?'text-4xl md:text-6xl':'text-2xl md:text-3xl';
@@ -319,15 +192,41 @@ var u=o.u?'<span class="pu inline-block bg-red-600 text-white font-black px-3 py
 var q=o.sq?'<span class="inline-block bg-slate-800 text-yellow-300 font-bold px-3 py-1.5 rounded-lg text-sm md:text-lg border border-yellow-600">ONLY '+o.q+' LEFT!</span>':'';
 var tg=(u||q)?'<div class="flex flex-wrap gap-2 justify-center mb-3">'+u+q+'</div>':'';
 var ws=o.w?'<span class="text-2xl md:text-4xl text-slate-500 line-through font-bold">&pound;'+esc(o.w)+'</span>':'';
-return '<div class="'+w+' bg-slate-900 border-4 border-yellow-400 rounded-3xl p-5 md:p-7 shadow-2xl text-center">'+img+tg+
-'<h2 class="'+ts+' font-black text-white leading-tight mb-3 uppercase">'+esc(o.t)+'</h2>'+
-'<div class="flex items-baseline justify-center gap-4 flex-wrap"><span class="'+ps+' font-black text-yellow-400 leading-none">&pound;'+esc(o.n)+'</span>'+ws+'</div></div>';
-}
-function slideshow(){
-var c=$('slidebox');
-function nx(){if(!inv.length)return;if(sIdx>=inv.length)sIdx=0;c.innerHTML=card(inv[sIdx],'slide');sIdx++}
-nx();sTimer=setInterval(nx,(parseFloat(speed)||20)*1000);
-}
+return '<div class="'+w+' bg-slate-900 border-4 border-yellow-400 rounded-3xl p-5 md:p-7 shadow-2xl text-center">'+img+tg+'<h2 class="'+ts+' font-black text-white leading-tight mb-3 uppercase">'+esc(o.t)+'</h2><div class="flex items-baseline justify-center gap-4 flex-wrap"><span class="'+ps+' font-black text-yellow-400 leading-none">&pound;'+esc(o.n)+'</span>'+ws+'</div></div>'}
+function slideshow(){var c=$('slidebox');function nx(){if(!inv.length)return;if(sIdx>=inv.length)sIdx=0;c.innerHTML=card(inv[sIdx],'slide');sIdx++}nx();sTimer=setInterval(nx,(parseFloat(speed)||20)*1000)}
+
+/* WIRE UP ALL BUTTONS */
+$('b1').onclick=initLaptop;
+$('b2').onclick=initPhone;
+$('b3').onclick=function(){$('pairbox').classList.add('hidden')};
+$('b4').onclick=function(){if(confirm('Reset? Export your sold log first.'))location.href=location.pathname};
+$('b5').onclick=function(){doConnect(null)};
+$('b6').onclick=function(){$('f-cam').click()};
+$('b7').onclick=function(){$('f-lib').click()};
+$('b8').onclick=clearPhoto;
+$('b9').onclick=addDeal;
+$('b10').onclick=exportCsv;
+$('b11').onclick=clearSold;
+$('f-cam').onchange=function(){pickPhoto(this)};
+$('f-lib').onchange=function(){pickPhoto(this)};
+$('spd').oninput=function(){setSpeed(this.value)};
+$('ihead').oninput=sendBanners;
+$('ifoot').oninput=sendBanners;
+$('bl-slide').onclick=function(){setLayout('slide')};
+$('bl-vertical').onclick=function(){setLayout('vertical')};
+$('bl-horizontal').onclick=function(){setLayout('horizontal')};
+var uts=document.querySelectorAll('.ut');
+for(var z=0;z<uts.length;z++){uts[z].onclick=function(){$('f-urg').value=this.getAttribute('data-u')}}
+document.addEventListener('click',function(ev){
+var t=ev.target.closest?ev.target.closest('.ia,.sp,.su'):null;
+if(!t)return;
+if(t.classList.contains('sp')){editSold(t.getAttribute('data-s'));return}
+if(t.classList.contains('su')){undoSold(t.getAttribute('data-s'));return}
+var a=t.getAttribute('data-a'),i=t.getAttribute('data-i');
+if(a==='sell')sell(i);else if(a==='tog')tog(i);else if(a==='save')save(i);
+else if(a==='del')del(i);else if(a==='set')setPrice(i);
+else if(a==='m1')mark(i,1);else if(a==='m2')mark(i,2);else if(a==='m5')mark(i,5);
+});
 if(new URLSearchParams(location.search).has('c')){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initPhone);else initPhone();
 }
