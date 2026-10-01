@@ -268,4 +268,383 @@ function initLaptopDisplay() {
 
   peer.on('open', function (id) {
     document.getElementById('peer-id-display').innerText = id;
+ var base = window.location.origin + window.location.pathname;
+    var pairingUrl = base + '?connectTo=' + encodeURIComponent(id);
+
+    var holder = document.getElementById('qrcode');
+    holder.innerHTML = '';
+    new QRCode(holder, {
+      text: pairingUrl,
+      width: 180,
+      height: 180,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+
+    if (window.location.protocol === 'file:') {
+      var warn = document.getElementById('pair-net-warning');
+      warn.classList.remove('hidden');
+      warn.innerText = 'You opened this from a local file. The QR link will not work on your phone. ' +
+                       'Host it on GitHub Pages, then type the Display ID into the phone manually.';
+    }
+  });
+
+  peer.on('connection', function (connection) {
+    conn = connection;
+    conn.on('open', function () {
+      hide('pairing-overlay');
+      setupDataListener();
+    });
+    conn.on('close', function () { show('pairing-overlay'); });
+  });
+
+  peer.on('error', function (err) {
+    document.getElementById('peer-id-display').innerText = 'Network error: ' + err.type;
+    var warn = document.getElementById('pair-net-warning');
+    warn.classList.remove('hidden');
+    warn.innerText = 'PeerJS error (' + err.type + '). Check this device has internet for the initial handshake.';
+  });
+}
+
+function dismissPairing() { hide('pairing-overlay'); }
+
+/* ---------------- PHONE ---------------- */
+function initPhoneAdmin() {
+  if (!guardLibraries()) { return; }
+  hide('setup-screen');
+  var pv = document.getElementById('phone-view');
+  pv.classList.remove('hidden');
+  pv.classList.add('block');
+
+  var urlParams = new URLSearchParams(window.location.search);
+  var autoConnectId = urlParams.get('connectTo');
+
+  peer = new Peer(PEER_CONFIG);
+
+  peer.on('open', function () {
+    if (autoConnectId) {
+      document.getElementById('target-peer-id').value = autoConnectId;
+      setTimeout(function () { connectToLaptop(autoConnectId); }, 600);
+    }
+  });
+
+  peer.on('error', function (err) {
+    setStatus('&#9679; Error: ' + err.type, false);
+  });
+
+  changeLayout(currentLayout);
+}
+
+function setStatus(html, online) {
+  var el = document.getElementById('conn-status');
+  el.innerHTML = html;
+  el.className = online
+    ? 'text-xs text-emerald-400 font-bold'
+    : 'text-xs text-red-400 font-bold';
+}
+
+function connectToLaptop(targetId) {
+  var id = targetId || document.getElementById('target-peer-id').value.trim();
+  if (!id) { alert('Please enter or scan a valid Display ID.'); return; }
+  if (!peer) { alert('Network not ready yet, wait two seconds and tap Link again.'); return; }
+
+  setStatus('&#9679; Connecting...', false);
+  conn = peer.connect(id, { reliable: true });
+
+  conn.on('open', function () {
+    setStatus('&#9679; Connected to Display', true);
+    hide('manual-connect-card');
+    changeLayout(currentLayout);
+    updateSpeed(document.getElementById('speed-slider').value);
+    sendBanners();
+    syncAndRenderAdmin();
+  });
+
+  conn.on('close', function () {
+    setStatus('&#9679; Disconnected', false);
+    show('manual-connect-card');
+  });
+
+  conn.on('error', function () { setStatus('&#9679; Link failed', false); });
+}
+
+function send(payload) {
+  if (conn && conn.open) { conn.send(payload); }
+}
+
+/* ---------------- DISPLAY DATA IN ---------------- */
+function setupDataListener() {
+  conn.on('data', function (payload) {
+    if (!payload || !payload.type) { return; }
+    if (payload.type === 'LAYOUT') {
+      currentLayout = payload.value;
+      renderDisplay();
+    } else if (payload.type === 'SPEED') {
+      scrollSpeed = payload.value;
+      document.getElementById('view-viewport').style.setProperty('--scroll-speed', scrollSpeed);
+      if (currentLayout === 'slide') { renderDisplay(); }
+    } else if (payload.type === 'BANNERS') {
+      document.getElementById('display-header').textContent = payload.header;
+      document.getElementById('display-footer').textContent = payload.footer;
+    } else if (payload.type === 'INVENTORY') {
+      activeInventory = payload.data || [];
+      renderDisplay();
+    }
+  });
+}
+
+/* ---------------- CONTROLS ---------------- */
+function setUrgencyTemplate(text) {
+  document.getElementById('item-urgency').value = text;
+}
+
+function updateSpeed(val) {
+  document.getElementById('speed-val').innerText = val + 's';
+  scrollSpeed = val + 's';
+  send({ type: 'SPEED', value: val + 's' });
+}
+
+function changeLayout(mode) {
+  currentLayout = mode;
+  ['slide', 'vertical', 'horizontal'].forEach(function (m) {
+    var btn = document.getElementById('btn-layout-' + m);
+    if (!btn) { return; }
+    btn.className = (m === mode)
+      ? 'bg-emerald-600 p-2 text-xs font-bold rounded-lg border-2 border-white'
+      : 'bg-slate-800 p-2 text-xs font-bold rounded-lg border-2 border-transparent';
+  });
+  send({ type: 'LAYOUT', value: mode });
+}
+
+function sendBanners() {
+  send({
+    type: 'BANNERS',
+    header: document.getElementById('input-header').value,
+    footer: document.getElementById('input-footer').value
+  });
+}
+
+function hardReset() {
+  if (confirm('Reset the app on this device?')) {
+    window.location.href = window.location.origin + window.location.pathname;
+  }
+}
+
+/* ---------------- INVENTORY ---------------- */
+function esc(s) {
+  return String(s === undefined || s === null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function addDeal() {
+  var title    = document.getElementById('item-title').value.trim();
+  var wasPrice = document.getElementById('item-was-price').value.trim();
+  var nowPrice = document.getElementById('item-now-price').value.trim();
+  var hasQty   = document.getElementById('item-qty-toggle').checked;
+  var qty      = parseInt(document.getElementById('item-qty').value, 10) || 1;
+  var urgency  = document.getElementById('item-urgency').value.trim();
+  var fileInput = document.getElementById('item-image');
+
+  if (!title || !nowPrice) { alert('Provide at least a title and a sale price.'); return; }
+
+  var newDeal = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+    title: title, wasPrice: wasPrice, nowPrice: nowPrice,
+    hasQty: hasQty, qty: qty, urgency: urgency, img: ''
+  };
+
+  if (fileInput.files && fileInput.files[0]) {
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var imgObj = new Image();
+      imgObj.onload = function () {
+        var canvas = document.createElement('canvas');
+        var maxW = 400;
+        var scale = Math.min(1, maxW / imgObj.width);
+        canvas.width  = Math.round(imgObj.width * scale);
+        canvas.height = Math.round(imgObj.height * scale);
+        canvas.getContext('2d').drawImage(imgObj, 0, 0, canvas.width, canvas.height);
+        newDeal.img = canvas.toDataURL('image/jpeg', 0.6);
+        pushInventoryUpdate(newDeal);
+      };
+      imgObj.onerror = function () { pushInventoryUpdate(newDeal); };
+      imgObj.src = e.target.result;
+    };
+    reader.readAsDataURL(fileInput.files[0]);
+  } else {
+    pushInventoryUpdate(newDeal);
+  }
+}
+
+function pushInventoryUpdate(item) {
+  activeInventory.push(item);
+  syncAndRenderAdmin();
+  document.getElementById('item-title').value = '';
+  document.getElementById('item-was-price').value = '';
+  document.getElementById('item-now-price').value = '';
+  document.getElementById('item-urgency').value = '';
+  document.getElementById('item-image').value = '';
+  document.getElementById('item-qty').value = '1';
+}
+
+function modifyStock(id, change) {
+  var idx = -1;
+  for (var i = 0; i < activeInventory.length; i++) {
+    if (activeInventory[i].id === id) { idx = i; break; }
+  }
+  if (idx === -1) { return; }
+
+  if (activeInventory[idx].hasQty) {
+    activeInventory[idx].qty += change;
+    if (activeInventory[idx].qty <= 0) { activeInventory.splice(idx, 1); }
+  } else if (change < 0) {
+    activeInventory.splice(idx, 1);
+  }
+  syncAndRenderAdmin();
+}
+
+function syncAndRenderAdmin() {
+  send({ type: 'INVENTORY', data: activeInventory });
+
+  var list = document.getElementById('admin-inventory-list');
+  if (!list) { return; }
+
+  if (activeInventory.length === 0) {
+    list.innerHTML = '<p class="text-xs text-slate-600 italic py-3 text-center">No active products on screen yet.</p>';
+    return;
+  }
+
+  list.innerHTML = activeInventory.map(function (item) {
+    var wasBit = item.wasPrice
+      ? '<span class="text-[11px] text-slate-500 line-through ml-1">&pound;' + esc(item.wasPrice) + '</span>'
+      : '';
+    return '' +
+      '<div class="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-lg p-2.5">' +
+        '<div class="flex-grow min-w-0">' +
+          '<div class="text-sm font-bold text-white truncate">' + esc(item.title) + '</div>' +
+          '<div class="text-xs"><span class="text-yellow-400 font-bold">&pound;' + esc(item.nowPrice) + '</span>' + wasBit + '</div>' +
+          '<div class="text-[10px] text-slate-500 mt-0.5">' +
+            (item.hasQty ? 'Stock: ' + item.qty : 'Infinite display') +
+          '</div>' +
+        '</div>' +
+        '<div class="flex gap-1.5 shrink-0">' +
+          '<button type="button" onclick="modifyStock(\'' + item.id + '\', -1)" class="bg-red-600 hover:bg-red-500 px-2.5 py-2 rounded-md text-[11px] font-black">SOLD</button>' +
+          (item.hasQty
+            ? '<button type="button" onclick="modifyStock(\'' + item.id + '\', 1)" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-md text-[11px] font-black">+</button>'
+            : '') +
+        '</div>' +
+      '</div>';
+  }).join('');
+}
+
+/* ---------------- RENDER BILLBOARD ---------------- */
+function renderDisplay() {
+  var vMode = document.getElementById('mode-vertical');
+  var hMode = document.getElementById('mode-horizontal');
+  var sMode = document.getElementById('mode-slide');
+  var empty = document.getElementById('empty-state');
+
+  [vMode, hMode, sMode].forEach(function (el) {
+    el.classList.add('hidden');
+    el.classList.remove('flex');
+  });
+  clearInterval(slideIntervalTimer);
+
+  if (activeInventory.length === 0) {
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  if (currentLayout === 'vertical') {
+    vMode.classList.remove('hidden');
+    vMode.classList.add('flex');
+    var vTrack = document.getElementById('vertical-scroll-track');
+    var vHtml = activeInventory.map(function (i) { return generateCardMarkup(i, 'vertical'); }).join('');
+    vTrack.innerHTML = vHtml + vHtml;
+  } else if (currentLayout === 'horizontal') {
+    hMode.classList.remove('hidden');
+    hMode.classList.add('flex');
+    var hTrack = document.getElementById('horizontal-scroll-track');
+    var hHtml = activeInventory.map(function (i) { return generateCardMarkup(i, 'horizontal'); }).join('');
+    hTrack.innerHTML = hHtml + hHtml;
+  } else {
+    sMode.classList.remove('hidden');
+    sMode.classList.add('flex');
+    runSlideShowEngine();
+  }
+}
+
+function generateCardMarkup(item, layout) {
+  var widthClass = (layout === 'horizontal')
+    ? 'w-80 md:w-96 flex-shrink-0'
+    : (layout === 'slide' ? 'w-full max-w-3xl mx-auto' : 'w-full');
+
+  var titleSize = (layout === 'slide') ? 'text-4xl md:text-6xl' : 'text-2xl md:text-3xl';
+  var priceSize = (layout === 'slide') ? 'text-7xl md:text-9xl' : 'text-5xl md:text-6xl';
+  var imgHeight = (layout === 'slide') ? 'h-64 md:h-80' : 'h-40 md:h-48';
+  var animClass = (layout === 'slide') ? ' slide-enter' : '';
+
+  var imgHtml = item.img
+    ? '<img src="' + item.img + '" alt="" class="w-full ' + imgHeight + ' object-cover rounded-xl mb-4 border-2 border-slate-700">'
+    : '';
+
+  var urgencyHtml = item.urgency
+    ? '<span class="pulse-urgent inline-block bg-red-600 text-white font-black px-3 py-1.5 rounded-lg text-sm md:text-lg uppercase tracking-wide">' + esc(item.urgency) + '</span>'
+    : '';
+
+  var qtyHtml = item.hasQty
+    ? '<span class="inline-block bg-slate-800 text-yellow-300 font-bold px-3 py-1.5 rounded-lg text-sm md:text-lg border border-yellow-600">&#128230; ONLY ' + item.qty + ' LEFT!</span>'
+    : '';
+
+  var tagRow = (urgencyHtml || qtyHtml)
+    ? '<div class="flex flex-wrap gap-2 justify-center mb-3">' + urgencyHtml + qtyHtml + '</div>'
+    : '';
+
+  var wasPriceHtml = item.wasPrice
+    ? '<span class="text-2xl md:text-4xl text-slate-500 line-through font-bold">&pound;' + esc(item.wasPrice) + '</span>'
+    : '';
+
+  return '' +
+    '<div class="' + widthClass + animClass + ' bg-slate-900 border-4 border-yellow-400 rounded-3xl p-5 md:p-7 shadow-2xl text-center">' +
+      imgHtml +
+      tagRow +
+      '<h2 class="' + titleSize + ' font-black text-white leading-tight mb-3 uppercase">' + esc(item.title) + '</h2>' +
+      '<div class="flex items-baseline justify-center gap-4 flex-wrap">' +
+        '<span class="' + priceSize + ' font-black text-yellow-400 leading-none">&pound;' + esc(item.nowPrice) + '</span>' +
+        wasPriceHtml +
+      '</div>' +
+    '</div>';
+}
+
+function runSlideShowEngine() {
+  var slideContainer = document.getElementById('slide-container');
+  function displayNextSlide() {
+    if (activeInventory.length === 0) { return; }
+    if (slideIndex >= activeInventory.length) { slideIndex = 0; }
+    slideContainer.innerHTML = generateCardMarkup(activeInventory[slideIndex], 'slide');
+    slideIndex++;
+  }
+  displayNextSlide();
+  var ms = (parseFloat(scrollSpeed) || 20) * 1000;
+  slideIntervalTimer = setInterval(displayNextSlide, ms);
+}
+
+/* ---------------- AUTO ROUTE ---------------- */
+(function autoRoute() {
+  var params = new URLSearchParams(window.location.search);
+  if (params.has('connectTo')) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initPhoneAdmin);
+    } else {
+      initPhoneAdmin();
+    }
+  }
+})();
+</script>
+
+</body>
+</html>
 
