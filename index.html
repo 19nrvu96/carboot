@@ -1,14 +1,15 @@
+html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Car Boot Smart Display & Controller</title>
-    <!-- Tailwind CSS for modern styling -->
+    <title>Car Boot Smart Display Suite</title>
+    <!-- Tailwind CSS Stylesheet -->
     <script src="https://tailwindcss.com"></script>
-    <!-- PeerJS for instant phone-to-laptop wireless connection -->
+    <!-- PeerJS Wireless Engine -->
     <script src="https://unpkg.com"></script>
-    <!-- QRCode.js for generating the dynamic setup link -->
+    <!-- QRCode Generator Script -->
     <script src="https://cloudflare.com"></script>
     <style>
         @keyframes marquee-vertical {
@@ -24,93 +25,85 @@
         .animate-scroll-v:hover, .animate-scroll-h:hover { animation-play-state: paused; }
     </style>
 </head>
-<body class="bg-slate-900 text-white font-sans overflow-x-hidden">
+<body class="bg-slate-900 text-white font-sans overflow-x-hidden m-0 p-0">
 
-    <!-- DEVICE SELECTION ROUTER SCREEN -->
+    <!-- INITIAL ROUTER SETUP SCREEN -->
     <div id="setup-screen" class="fixed inset-0 bg-slate-950 flex flex-col items-center justify-center z-50 p-6">
-        <h1 class="text-3xl font-extrabold mb-2 text-yellow-400 text-center">🚗 Car Boot Display Suite</h1>
-        <p class="text-slate-400 mb-8 text-center max-w-sm">Choose how you want to configure this device for your stall.</p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-md">
-            <button onclick="initLaptopDisplay()" class="p-6 bg-blue-600 hover:bg-blue-500 rounded-2xl text-center shadow-xl transition-all transform hover:scale-105">
-                <span class="text-4xl block mb-2">💻</span>
-                <span class="font-bold text-lg block">Laptop Mode</span>
-                <span class="text-xs text-blue-200">The main screen customers look at</span>
-            </button>
-            <button onclick="initPhoneAdmin()" class="p-6 bg-emerald-600 hover:bg-emerald-500 rounded-2xl text-center shadow-xl transition-all transform hover:scale-105">
-                <span class="text-4xl block mb-2">📱</span>
-                <span class="font-bold text-lg block">Phone Controller</span>
-                <span class="text-xs text-emerald-200">The remote to upload & slash prices</span>
-            </button>
+        <div class="text-center max-w-md">
+            <h1 class="text-4xl font-black mb-3 text-yellow-400 tracking-tight">🚗 CAR BOOT SIGN</h1>
+            <p class="text-slate-400 mb-8 text-sm">Convert this device into an auto-scrolling billboard or your wireless phone control remote.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button onclick="initLaptopDisplay()" class="p-6 bg-blue-600 hover:bg-blue-500 rounded-2xl text-center shadow-xl transition-all transform hover:scale-105">
+                    <span class="text-4xl block mb-2">💻</span>
+                    <span class="font-bold text-lg block">Laptop View</span>
+                    <span class="text-xs text-blue-200 block mt-1">Faces the customers</span>
+                </button>
+                <button onclick="initPhoneAdmin()" class="p-6 bg-emerald-600 hover:bg-emerald-500 rounded-2xl text-center shadow-xl transition-all transform hover:scale-105">
+                    <span class="text-4xl block mb-2">📱</span>
+                    <span class="font-bold text-lg block">Phone Remote</span>
+                    <span class="text-xs text-emerald-200 block mt-1">Uploads your deals</span>
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- LAPTOP DISPLAY INTERFACE -->
+    <!-- MAIN LAPTOP DIGITAL SCREEN -->
     <div id="laptop-view" class="hidden min-h-screen flex flex-col justify-between bg-black relative">
-        <!-- Connection overlay helper for first-time pairing -->
-        <div id="pairing-overlay" class="absolute inset-0 bg-slate-950 bg-opacity-95 flex flex-col items-center justify-center z-40 p-4">
+        <div id="pairing-overlay" class="absolute inset-0 bg-slate-950 bg-opacity-98 flex flex-col items-center justify-center z-40 p-4">
             <div class="bg-slate-900 p-8 rounded-3xl border-2 border-slate-800 text-center max-w-md shadow-2xl">
-                <h2 class="text-2xl font-bold mb-2">Connect Your Phone 📲</h2>
-                <p class="text-sm text-slate-400 mb-6">Make sure your phone hotspot is turned on, connect your laptop to it, then scan this code:</p>
-                <div id="qrcode" class="bg-white p-4 rounded-xl inline-block mb-4 shadow-inner"></div>
-                <div class="text-xs text-yellow-400 font-mono select-all bg-slate-950 p-2 rounded" id="peer-id-display">Generating ID...</div>
+                <h2 class="text-2xl font-bold mb-2 text-white">Pair Your Phone 📲</h2>
+                <p class="text-xs text-slate-400 mb-6">Turn on your personal hotspot, connect this laptop to it, then scan this code with your phone:</p>
+                <div class="bg-white p-4 rounded-xl inline-block mb-4 shadow-inner">
+                    <div id="qrcode"></div>
+                </div>
+                <div class="text-xs text-yellow-400 font-mono select-all bg-slate-950 p-2 rounded" id="peer-id-display">Generating Secure ID...</div>
             </div>
         </div>
 
-        <!-- Dynamic Header Message (Editable) -->
-        <div id="display-header" class="bg-yellow-400 text-slate-950 py-4 px-6 text-center font-black text-3xl md:text-5xl uppercase tracking-wider shadow-lg">
+        <div id="display-header" class="bg-yellow-400 text-slate-950 py-4 px-6 text-center font-black text-3xl md:text-5xl uppercase tracking-wider shadow-md">
             ⚡ CASH OR CARD ACCEPTED ⚡
         </div>
 
-        <!-- MAIN SCROLL CONTAINERS (Toggled via remote) -->
         <div id="view-viewport" class="flex-grow flex items-center justify-center overflow-hidden p-6 relative">
-            <!-- 1. Slide View (One Giant Deal) -->
             <div id="mode-slide" class="w-full max-w-4xl h-full hidden flex items-center justify-center">
                 <div id="slide-container" class="w-full"></div>
             </div>
-
-            <!-- 2. Vertical Roll -->
             <div id="mode-vertical" class="w-full h-full hidden overflow-hidden flex-col">
                 <div id="vertical-scroll-track" class="flex flex-col gap-6 animate-scroll-v"></div>
             </div>
-
-            <!-- 3. Horizontal Roll -->
             <div id="mode-horizontal" class="w-full hidden overflow-hidden items-center">
                 <div id="horizontal-scroll-track" class="flex gap-6 whitespace-nowrap animate-scroll-h"></div>
             </div>
-            
-            <div id="empty-state" class="text-slate-600 text-2xl font-medium">Waiting for deals from your phone...</div>
+            <div id="empty-state" class="text-slate-600 text-2xl font-medium tracking-wide">Waiting for deals from your phone...</div>
         </div>
 
-        <!-- Dynamic Footer Message (Editable) -->
         <div id="display-footer" class="bg-red-600 text-white py-3 px-6 text-center font-bold text-xl md:text-2xl tracking-wide">
             💥 DEALS CHANGING CONSTANTLY — ASK FOR BUNDLES! 💥
         </div>
     </div>
 
-    <!-- PHONE ADMIN PANEL CONTROLLER -->
+    <!-- PHONE CONTROLLER REMOTE -->
     <div id="phone-view" class="hidden min-h-screen bg-slate-900 p-4 max-w-md mx-auto">
         <header class="flex justify-between items-center mb-6 pb-4 border-b border-slate-800">
             <div>
-                <h1 class="text-xl font-black text-emerald-400">Stall Command</h1>
-                <span id="conn-status" class="text-xs text-red-400 flex items-center gap-1">● Disconnected</span>
+                <h1 class="text-xl font-black text-emerald-400 tracking-tight">Stall Command</h1>
+                <span id="conn-status" class="text-xs text-red-400 flex items-center gap-1 font-bold">● Disconnected</span>
             </div>
-            <button onclick="window.location.reload()" class="text-xs bg-slate-800 px-3 py-1.5 rounded-lg text-slate-400">Reset</button>
+            <button onclick="window.location.reload()" class="text-xs bg-slate-800 px-3 py-1.5 rounded-lg text-slate-400 font-medium">Reset App</button>
         </header>
 
-        <!-- Connection Handler Card (Visible if opened standalone) -->
         <div id="manual-connect-card" class="bg-slate-950 p-4 rounded-xl border border-slate-800 mb-6">
-            <label class="block text-xs font-semibold text-slate-400 mb-1">Enter Laptop ID (If not using QR scan):</label>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Enter Laptop ID Manually:</label>
             <div class="flex gap-2">
-                <input type="text" id="target-peer-id" class="bg-slate-900 flex-grow px-3 py-1.5 rounded-lg font-mono text-sm border border-slate-700 text-white" placeholder="Paste ID here">
-                <button onclick="connectToLaptop()" class="bg-emerald-600 px-4 py-1.5 rounded-lg text-sm font-bold">Link</button>
+                <input type="text" id="target-peer-id" class="bg-slate-900 flex-grow px-3 py-1.5 rounded-lg font-mono text-sm border border-slate-700 text-white" placeholder="Paste Display ID">
+                <button onclick="connectToLaptop(null)" class="bg-emerald-600 px-4 py-1.5 rounded-lg text-sm font-bold shadow-md">Link</button>
             </div>
         </div>
 
-        <!-- Configuration Settings Quick Panel -->
         <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 mb-6 space-y-4">
-            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">Display Layout & Speed</h3>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Display Layout & Speed Setup</h3>
             <div>
-                <label class="block text-xs text-slate-400 mb-1">Layout Style:</label>
+                <label class="block text-xs text-slate-400 mb-1">Layout Configuration Mode:</label>
                 <div class="grid grid-cols-3 gap-2">
                     <button onclick="changeLayout('slide')" id="btn-layout-slide" class="bg-slate-800 p-2 text-xs font-bold rounded-lg border-2 border-transparent">1 Big Deal</button>
                     <button onclick="changeLayout('vertical')" id="btn-layout-vertical" class="bg-slate-800 p-2 text-xs font-bold rounded-lg border-2 border-transparent">Vertical</button>
@@ -119,44 +112,44 @@
             </div>
             <div>
                 <label class="block text-xs text-slate-400 mb-1 flex justify-between">
-                    <span>Scroll Duration / Speed:</span>
-                    <span id="speed-val">20s</span>
+                    <span>Scroll Duration / Speed pacing:</span>
+                    <span id="speed-val" class="font-bold text-emerald-400">20s</span>
                 </label>
                 <input type="range" id="speed-slider" min="5" max="45" value="20" oninput="updateSpeed(this.value)" class="w-full accent-emerald-500">
             </div>
             <div class="grid grid-cols-1 gap-2 pt-2">
                 <div>
                     <label class="block text-xs text-slate-400 mb-1">Edit Banner Header:</label>
-                    <input type="text" id="input-header" value="⚡ CASH OR CARD ACCEPTED ⚡" oninput="sendBanners()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm">
+                    <input type="text" id="input-header" value="⚡ CASH OR CARD ACCEPTED ⚡" oninput="sendBanners()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
                 </div>
                 <div>
                     <label class="block text-xs text-slate-400 mb-1">Edit Banner Footer:</label>
-                    <input type="text" id="input-footer" value="💥 DEALS CHANGING CONSTANTLY — ASK FOR BUNDLES! 💥" oninput="sendBanners()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm">
+                    <input type="text" id="input-footer" value="💥 DEALS CHANGING CONSTANTLY — ASK FOR BUNDLES! 💥" oninput="sendBanners()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
                 </div>
             </div>
         </div>
 
-        <!-- Add New Item Card -->
         <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 mb-6 space-y-4">
-            <h3 class="text-sm font-bold uppercase tracking-wider text-emerald-400">Launch New Deal</h3>
-            
+            <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-400">Launch New Price Cut</h3>
             <div>
                 <label class="block text-xs text-slate-400 mb-1">Item Title:</label>
-                <input type="text" id="item-title" placeholder="e.g., Retro Leather Jacket" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm">
+                <input type="text" id="item-title" placeholder="e.g., Retro Leather Jacket" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
             </div>
-
             <div class="grid grid-cols-2 gap-2">
                 <div>
                     <label class="block text-xs text-slate-400 mb-1">Was Price (£):</label>
-                    <input type="text" id="item-was-price" placeholder="45" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm">
+                    <input type="text" id="item-was-price" placeholder="45" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
                 </div>
                 <div>
                     <label class="block text-xs text-slate-400 mb-1 text-yellow-400 font-bold">Now Price (£):</label>
                     <input type="text" id="item-now-price" placeholder="15" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm font-bold text-yellow-400">
                 </div>
             </div>
-
-Quantity Stock:
+            <div class="grid grid-cols-2 gap-3 items-end">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Quantity Stock:</label>
+                    <div class="flex gap-2 items-center">
+Use code with caution.
 Snap / Upload Photo:
 Urgency Messaging:
 🔥 Almost Gone
@@ -165,84 +158,78 @@ Urgency Messaging:
 📦 Must Go
 
 
+
 ➕ Stream Deal to Laptop Screen
 Live Active Listings
 
 No active products on screen yet.
 
 
-let peer = null;
-let conn = null;
-let currentLayout = 'vertical';
-let scrollSpeed = '20s';
-let activeInventory = [];
-let slideIndex = 0;
-let slideIntervalTimer = null;
-// SYSTEM ROUTING FUNCTIONS
+var peer = null;
+var conn = null;
+var currentLayout = 'vertical';
+var scrollSpeed = '20s';
+var activeInventory = [];
+var slideIndex = 0;
+var slideIntervalTimer = null;
 function initLaptopDisplay() {
-document.getElementById('setup-screen').classList.add('hidden');
-document.getElementById('laptop-view').classList.remove('hidden');
-// Initialise PeerJS for screen setup
+document.getElementById('setup-screen').style.display = 'none';
+document.getElementById('laptop-view').style.display = 'flex';
 peer = new Peer();
-peer.on('open', (id) => {
+peer.on('open', function(id) {
 document.getElementById('peer-id-display').innerText = id;
-// Form network sharing URL using local address structure
-const pairingUrl = ${window.location.origin}${window.location.pathname}?connectTo=${id};
-// Build visual lookup asset
+var pairingUrl = window.location.origin + window.location.pathname + '?connectTo=' + id;
+document.getElementById("qrcode").innerHTML = "";
 new QRCode(document.getElementById("qrcode"), {
 text: pairingUrl,
 width: 180,
 height: 180
 });
 });
-peer.on('connection', (connection) => {
+peer.on('connection', function(connection) {
 conn = connection;
-document.getElementById('pairing-overlay').classList.add('hidden');
+document.getElementById('pairing-overlay').style.display = 'none';
 setupDataListener();
 });
 }
 function initPhoneAdmin() {
-document.getElementById('setup-screen').classList.add('hidden');
-document.getElementById('phone-view').classList.remove('hidden');
-// Check for direct routing tags passed from lookup code
-const urlParams = new URLSearchParams(window.location.search);
-const autoConnectId = urlParams.get('connectTo');
+document.getElementById('setup-screen').style.display = 'none';
+document.getElementById('phone-view').style.display = 'block';
+var urlParams = new URLSearchParams(window.location.search);
+var autoConnectId = urlParams.get('connectTo');
 peer = new Peer();
-peer.on('open', () => {
+peer.on('open', function() {
 if (autoConnectId) {
 document.getElementById('target-peer-id').value = autoConnectId;
-setTimeout(() => { connectToLaptop(autoConnectId); }, 800);
+setTimeout(function() { connectToLaptop(autoConnectId); }, 800);
 }
 });
 }
 function connectToLaptop(targetId) {
-const id = targetId || document.getElementById('target-peer-id').value;
+var id = targetId || document.getElementById('target-peer-id').value;
 if (!id) return alert('Please enter or scan a valid Screen ID.');
 conn = peer.connect(id);
-conn.on('open', () => {
+conn.on('open', function() {
 document.getElementById('conn-status').innerText = '● Connected to Display';
-document.getElementById('conn-status').className = 'text-xs text-emerald-400 flex items-center gap-1';
-document.getElementById('manual-connect-card').classList.add('hidden');
-// Synchronise structural variables instantly
+document.getElementById('conn-status').className = 'text-xs text-emerald-400 flex items-center gap-1 font-bold';
+document.getElementById('manual-connect-card').style.display = 'none';
 changeLayout(currentLayout);
 updateSpeed(document.getElementById('speed-slider').value);
 sendBanners();
 });
-conn.on('close', () => {
+conn.on('close', function() {
 document.getElementById('conn-status').innerText = '● Disconnected';
-document.getElementById('conn-status').className = 'text-xs text-red-400 flex items-center gap-1';
+document.getElementById('conn-status').className = 'text-xs text-red-400 flex items-center gap-1 font-bold';
 });
 }
-// WIRELESS STATE SYNC HANDLING
 function setupDataListener() {
-conn.on('data', (payload) => {
+conn.on('data', function(payload) {
 if (payload.type === 'LAYOUT') {
 currentLayout = payload.value;
 renderDisplay();
 } else if (payload.type === 'SPEED') {
 scrollSpeed = payload.value;
-document.getElementById('view-viewport').style.setProperty('--scroll-speed',
-scrollSpeed);
+document.getElementById('view-viewport').style.setProperty('--scroll-speed', scrollSpeed);
 } else if (payload.type === 'BANNERS') {
 document.getElementById('display-header').innerHTML = payload.header;
 document.getElementById('display-footer').innerHTML = payload.footer;
@@ -252,7 +239,6 @@ renderDisplay();
 }
 });
 }
-// ADMIN CONTROLLER ACTIONS
 function setUrgencyTemplate(text) {
 document.getElementById('item-urgency').value = text;
 }
@@ -264,8 +250,8 @@ conn.send({ type: 'SPEED', value: val + 's' });
 }
 function changeLayout(mode) {
 currentLayout = mode;
-['slide', 'vertical', 'horizontal'].forEach(m => {
-const btn = document.getElementById(btn-layout-${m});
+['slide', 'vertical', 'horizontal'].forEach(function(m) {
+var btn = document.getElementById('btn-layout-' + m);
 if (btn) btn.className = (m === mode)
 ? 'bg-emerald-600 p-2 text-xs font-bold rounded-lg border-2 border-white'
 : 'bg-slate-800 p-2 text-xs font-bold rounded-lg border-2 border-transparent';
@@ -284,34 +270,33 @@ footer: document.getElementById('input-footer').value
 }
 }
 function addDeal() {
-const title = document.getElementById('item-title').value;
-const wasPrice = document.getElementById('item-was-price').value;
-const nowPrice = document.getElementById('item-now-price').value;
-const hasQty = document.getElementById('item-qty-toggle').checked;
-const qty = parseInt(document.getElementById('item-qty').value) || 1;
-const urgency = document.getElementById('item-urgency').value;
-const fileInput = document.getElementById('item-image');
-if (!title || !nowPrice) return alert('Provide at least a title and a promotional sale price.');
-const newDeal = {
+var title = document.getElementById('item-title').value;
+var wasPrice = document.getElementById('item-was-price').value;
+var nowPrice = document.getElementById('item-now-price').value;
+var hasQty = document.getElementById('item-qty-toggle').checked;
+var qty = parseInt(document.getElementById('item-qty').value) || 1;
+var urgency = document.getElementById('item-urgency').value;
+var fileInput = document.getElementById('item-image');
+if (!title || !nowPrice) return alert('Provide at least a title and a sale price.');
+var newDeal = {
 id: Date.now().toString(),
-title, wasPrice, nowPrice, hasQty, qty, urgency,
-img: 'unsplash.com' // default fallback visual
+title: title, wasPrice: wasPrice, nowPrice: nowPrice, hasQty: hasQty, qty: qty, urgency: urgency,
+img: 'unsplash.com'
 };
 if (fileInput.files && fileInput.files[0]) {
-const reader = new FileReader();
+var reader = new FileReader();
 reader.onload = function(e) {
-// Automatically compress high resolution pictures to maintain rapid network transfers
-const imgObj = new Image();
+var imgObj = new Image();
 imgObj.src = e.target.result;
 imgObj.onload = function() {
-const canvas = document.createElement('canvas');
-const ctx = canvas.getContext('2d');
-const maxW = 400;
-const scale = maxW / imgObj.width;
+var canvas = document.createElement('canvas');
+var ctx = canvas.getContext('2d');
+var maxW = 400;
+var scale = maxW / imgObj.width;
 canvas.width = maxW;
 canvas.height = imgObj.height * scale;
 ctx.drawImage(imgObj, 0, 0, canvas.width, canvas.height);
-newDeal.img = canvas.toDataURL('image/jpeg', 0.7);
+newDeal.img = canvas.toDataURL('image/jpeg', 0.6);
 pushInventoryUpdate(newDeal);
 }
 };
@@ -323,7 +308,6 @@ pushInventoryUpdate(newDeal);
 function pushInventoryUpdate(item) {
 activeInventory.push(item);
 syncAndRenderAdmin();
-// Clear entry blocks
 document.getElementById('item-title').value = '';
 document.getElementById('item-was-price').value = '';
 document.getElementById('item-now-price').value = '';
@@ -331,7 +315,7 @@ document.getElementById('item-urgency').value = '';
 document.getElementById('item-image').value = '';
 }
 function modifyStock(id, change) {
-const idx = activeInventory.findIndex(item => item.id === id);
+var idx = activeInventory.findIndex(function(item) { return item.id === id; });
 if (idx === -1) return;
 if (activeInventory[idx].hasQty) {
 activeInventory[idx].qty += change;
@@ -339,7 +323,6 @@ if (activeInventory[idx].qty <= 0) {
 activeInventory.splice(idx, 1);
 }
 } else if (change < 0) {
-// If quantity tracking is unticked, tapping minus removes it entirely
 activeInventory.splice(idx, 1);
 }
 syncAndRenderAdmin();
@@ -348,85 +331,88 @@ function syncAndRenderAdmin() {
 if (conn && conn.open) {
 conn.send({ type: 'INVENTORY', data: activeInventory });
 }
-const listContainer = document.getElementById('admin-inventory-list');
+var listContainer = document.getElementById('admin-inventory-list');
 if (activeInventory.length === 0) {
-listContainer.innerHTML = <p class="text-xs text-slate-500 italic">No active products on screen yet.</p>;
+listContainer.innerHTML = 'No active products on screen yet.';
 return;
 }
-listContainer.innerHTML = activeInventory.map(item => <div class="bg-slate-950 p-3 rounded-lg flex items-center justify-between gap-3 border border-slate-800"> <img src="${item.img}" class="w-12 h-12 rounded object-cover flex-shrink-0"> <div class="flex-grow min-w-0"> <h4 class="text-xs font-bold truncate text-white">${item.title}</h4> <p class="text-[11px] text-yellow-400 font-bold">£${item.nowPrice} <span class="line-through text-slate-500 font-normal">£${item.wasPrice}</span></p> <p class="text-[10px] text-slate-400">${item.hasQty ? 'Stock: ' + item.qty : 'Infinite display'}</p> </div> <div class="flex gap-1 flex-shrink-0"> <button onclick="modifyStock('${item.id}', -1)" class="bg-red-950 text-red-400 hover:bg-red-900 border border-red-800 font-black px-2.5 py-1 rounded text-xs">SOLD</button> ${item.hasQty ?+: ''} </div> </div>).join('');
+listContainer.innerHTML = activeInventory.map(function(item) {
+return '' +
+'' +
+'' +
+'' + item.title + '' +
+'£' + item.nowPrice + ' £' + item.wasPrice + '' +
+'' + (item.hasQty ? 'Stock: ' + item.qty : 'Infinite display') + '' +
+'' +
+'' +
+'SOLD' +
+(item.hasQty ? '+' : '') +
+'' +
+'';
+}).join('');
 }
-// CUSTOMER BILLBOARD RENDER CONTROLLER
 function renderDisplay() {
-const vMode = document.getElementById('mode-vertical');
-const hMode = document.getElementById('mode-horizontal');
-const sMode = document.getElementById('mode-slide');
-const emptyState = document.getElementById('empty-state');
-// Deactivate all displays initially
-[vMode, hMode, sMode].forEach(el => el.classList.add('hidden'));
+var vMode = document.getElementById('mode-vertical');
+var hMode = document.getElementById('mode-horizontal');
+var sMode = document.getElementById('mode-slide');
+var emptyState = document.getElementById('empty-state');
+[vMode, hMode, sMode].forEach(function(el) { el.style.display = 'none'; });
 clearInterval(slideIntervalTimer);
 if (activeInventory.length === 0) {
-emptyState.classList.remove('hidden');
+emptyState.style.display = 'block';
 return;
 }
-emptyState.classList.add('hidden');
+emptyState.style.display = 'none';
 if (currentLayout === 'vertical') {
-vMode.classList.remove('hidden');
-const track = document.getElementById('vertical-scroll-track');
-// Duplicate inventory strings dynamically to permit seamless, endless looping layout flow
-const itemsHtml = activeInventory.map(item => generateCardMarkup(item, 'vertical')).join('');
+vMode.style.display = 'flex';
+var track = document.getElementById('vertical-scroll-track');
+var itemsHtml = activeInventory.map(function(item) { return generateCardMarkup(item, 'vertical'); }).join('');
 track.innerHTML = itemsHtml + itemsHtml;
 }
 else if (currentLayout === 'horizontal') {
-hMode.classList.remove('hidden');
-const track = document.getElementById('horizontal-scroll-track');
-const itemsHtml = activeInventory.map(item => generateCardMarkup(item, 'horizontal')).join('');
+hMode.style.display = 'flex';
+var track = document.getElementById('horizontal-scroll-track');
+var itemsHtml = activeInventory.map(function(item) { return generateCardMarkup(item, 'horizontal'); }).join('');
 track.innerHTML = itemsHtml + itemsHtml;
 }
 else if (currentLayout === 'slide') {
-sMode.classList.remove('hidden');
+sMode.style.display = 'flex';
 runSlideShowEngine();
 }
 }
 function generateCardMarkup(item, layout) {
-const widthClass = layout === 'horizontal' ? 'w-80 md:w-96 flex-shrink-0' : 'w-full';
-return <div class="${widthClass} bg-slate-900 rounded-3xl overflow-hidden border-4 border-yellow-400 shadow-2xl flex flex-col transform hover:scale-[1.02] transition-transform duration-300"> <div class="relative h-64 md:h-80 bg-slate-950 flex-shrink-0"> <img src="${item.img}" class="w-full h-full object-cover"> ${item.urgency ?
-
-${item.urgency}
-
-: ''} ${item.hasQty ?
-
-📦 ONLY ${item.qty} LEFT!
-
-: ''} </div> <div class="p-5 flex flex-col justify-between flex-grow bg-slate-900"> <h2 class="text-2xl md:text-4xl font-extrabold tracking-tight line-clamp-2 text-white uppercase mb-2">${item.title}</h2> <div class="flex items-baseline gap-4 mt-auto"> <span class="text-4xl md:text-6xl font-black text-yellow-400 tracking-tight">£${item.nowPrice}</span> ${item.wasPrice ?£${item.wasPrice}: ''} </div> </div> </div>;
+var widthClass = layout === 'horizontal' ? 'w-80 md:w-96 flex-shrink-0' : 'w-full';
+var urgencyHtml = item.urgency ? '' + item.urgency + '' : '';
+var qtyHtml = item.hasQty ? '📦 ONLY ' + item.qty + ' LEFT!' : '';
+var wasPriceHtml = item.wasPrice ? '£' + item.wasPrice + '' : '';
+return '' +
+'' +
+'' +
+urgencyHtml + qtyHtml +
+'' +
+'' +
+'' + item.title + '' +
+'' +
+'£' + item.nowPrice + '' +
+wasPriceHtml +
+'' +
+'' +
+'';
 }
 function runSlideShowEngine() {
-const slideContainer = document.getElementById('slide-container');
-const displayNextSlide = () => {
+var slideContainer = document.getElementById('slide-container');
+var displayNextSlide = function() {
 if (activeInventory.length === 0) return;
 if (slideIndex >= activeInventory.length) slideIndex = 0;
 slideContainer.innerHTML = generateCardMarkup(activeInventory[slideIndex], 'slide');
 slideIndex++;
 };
 displayNextSlide();
-// Match transition sequence against user configuration rules
-const currentSpeedMs = (parseFloat(scrollSpeed) || 20) * 1000;
+var currentSpeedMs = (parseFloat(scrollSpeed) || 20) * 1000;
 slideIntervalTimer = setInterval(displayNextSlide, currentSpeedMs);
 }
-// CHECK ROUTING BEHAVIOUR ON LOAD
-const urlParams = new URLSearchParams(window.location.search);
+var urlParams = new URLSearchParams(window.location.search);
 if (urlParams.has('connectTo')) {
 initPhoneAdmin();
 }
-
-
-
-### Setup Execution (Under 30 Seconds)
-1. **Host for Free:** Drop this single `index.html` file into a free repository on **GitHub Pages** or upload it onto a deployment service like **Vercel** or **Netlify**.
-2. **Boot up on Laptop:** Open the deployment link on your laptop web browser and click **Laptop Mode**. 
-3. **Scan and Connect:** Turn on your phone's Personal Hotspot, connect your laptop to it, and use your phone's camera to scan the QR code displayed on the laptop screen.
-4. **Control Instantly:** The controller interface will automatically launch on your smartphone. Add your deals, snap or select your photos, and watch them render on your laptop sign with zero latency.
-
-<FollowUp>
-To ensure this runs perfectly on your setup, would you like me to adjust the **size or layouts** of the images to best fit your specific laptop screen aspect ratio?
-</FollowUp>
 
