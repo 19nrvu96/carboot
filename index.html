@@ -730,53 +730,835 @@ function syncAndRenderAdmin() {
     return;
   }
 
-  list.innerHTML = activeInventory.map(function (item) {
+  var out = '';
+
+  for (var n = 0; n < activeInventory.length; n++) {
+    var item = activeInventory[n];
     var i = item.id;
     var open = (editingId === i);
 
     var wasBit = item.wasPrice
       ? '<span class="text-[11px] text-slate-500 line-through ml-1">&pound;' + esc(item.wasPrice) + '</span>'
       : '';
+
     var thumb = item.img
       ? '<img src="' + item.img + '" alt="" class="w-11 h-11 object-cover rounded-md border border-slate-700 shrink-0">'
       : '';
 
-    var row = '' +
-      '<div class="flex items-center gap-2 bg-slate-900 border border-slate-800 p-2.5 ' +
-        (open ? 'rounded-t-lg' : 'rounded-lg') + '">' +
-        thumb +
-        '<div class="flex-grow min-w-0">' +
-          '<div class="text-sm font-bold text-white truncate">' + esc(item.title) + '</div>' +
-          '<div class="text-xs"><span class="text-yellow-400 font-bold">&pound;' + esc(item.nowPrice) + '</span>' + wasBit + '</div>' +
-          '<div class="text-[10px] text-slate-500 mt-0.5">' +
-            (item.hasQty ? 'Stock: ' + item.qty : 'Infinite display') +
-          '</div>' +
-        '</div>' +
-        '<div class="flex flex-col gap-1 shrink-0">' +
-          '<button type="button" onclick="modifyStock(\'' + i + '\', -1)" class="bg-red-600 hover:bg-red-500 px-2.5 py-1.5 rounded-md text-[11px] font-black">SOLD</button>' +
-          '<button type="button" onclick="toggleEdit(\'' + i + '\')" class="bg-slate-700 hover:bg-slate-600 px-2.5 py-1.5 rounded-md text-[11px] font-black">' +
-            (open ? 'CLOSE' : 'EDIT') + '</button>' +
-        '</div>' +
+    out += '<div class="flex items-center gap-2 bg-slate-900 border border-slate-800 p-2.5 '
+        + (open ? 'rounded-t-lg' : 'rounded-lg') + '">'
+      + thumb
+      + '<div class="flex-grow min-w-0">'
+        + '<div class="text-sm font-bold text-white truncate">' + esc(item.title) + '</div>'
+        + '<div class="text-xs"><span class="text-yellow-400 font-bold">&pound;' + esc(item.nowPrice) + '</span>' + wasBit + '</div>'
+        + '<div class="text-[10px] text-slate-500 mt-0.5">' + (item.hasQty ? 'Stock: ' + item.qty : 'Infinite display') + '</div>'
+      + '</div>'
+      + '<div class="flex flex-col gap-1 shrink-0">'
+        + '<button type="button" onclick="modifyStock(\'' + i + '\', -1)" class="bg-red-600 hover:bg-red-500 px-2.5 py-1.5 rounded-md text-[11px] font-black">SOLD</button>'
+        + '<button type="button" onclick="toggleEdit(\'' + i + '\')" class="bg-slate-700 hover:bg-slate-600 px-2.5 py-1.5 rounded-md text-[11px] font-black">' + (open ? 'CLOSE' : 'EDIT') + '</button>'
+      + '</div>'
+    + '</div>';
+
+    if (!open) { continue; }
+
+    out += '<div class="bg-slate-900 border border-t-0 border-slate-800 rounded-b-lg p-3 space-y-2.5">'
+
+      + '<div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Quick markdown</div>'
+      + '<div class="grid grid-cols-4 gap-1.5">'
+        + '<button type="button" onclick="applyMarkdown(\'' + i + '\', 1)" class="bg-amber-600 hover:bg-amber-500 p-2 text-[11px] font-black rounded-md">-&pound;1</button>'
+        + '<button type="button" onclick="applyMarkdown(\'' + i + '\', 2)" class="bg-amber-600 hover:bg-amber-500 p-2 text-[11px] font-black rounded-md">-&pound;2</button>'
+        + '<button type="button" onclick="applyMarkdown(\'' + i + '\', 5)" class="bg-amber-600 hover:bg-amber-500 p-2 text-[11px] font-black rounded-md">-&pound;5</button>'
+        + '<button type="button" onclick="customMarkdown(\'' + i + '\')" class="bg-slate-700 hover:bg-slate-600 p-2 text-[11px] font-black rounded-md">Set&hellip;</button>'
+      + '</div>'
+
+      + '<div><label class="block text-[10px] text-slate-500 mb-1">Title</label>'
+        + '<input type="text" id="ed-title-' + i + '" value="' + esc(item.title) + '" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white"></div>'
+
+      + '<div class="grid grid-cols-2 gap-2">'
+        + '<div><label class="block text-[10px] text-slate-500 mb-1">Was &pound;</label>'
+          + '<input type="text" inputmode="decimal" id="ed-was-' + i + '" value="' + esc(item.wasPrice) + '" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white"></div>'
+        + '<div><label class="block text-[10px] text-yellow-400 font-bold mb-1">Now &pound;</label>'
+          + '<input type="text" inputmode="decimal" id="ed-now-' + i + '" value="' + esc(item.nowPrice) + '" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm font-bold text-yellow-400"></div>'
+      + '</div>'
+
+      + '<div><label class="block text-[10px] text-slate-500 mb-1">Urgency tag</label>'
+        + '<input type="text" id="ed-urg-' + i + '" value="' + esc(item.urgency) + '" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white"></div>'
+
+      + '<div class="grid grid-cols-2 gap-2 items-end">'
+        + '<div><label class="block text-[10px] text-slate-500 mb-1">Stock qty</label>'
+          + '<input type="number" min="1" step="1" id="ed-qty-' + i + '" value="' + item.qty + '" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white"></div>'
+        + '<label class="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-lg p-2 cursor-pointer">'
+          + '<input type="checkbox" id="ed-showqty-' + i + '"' + (item.hasQty ? ' checked' : '') + ' class="w-4 h-4 accent-emerald-500 shrink-0">'
+          + '<span class="text-[11px] text-slate-300 leading-tight">Show countdown</span></label>'
+      + '</div>'
+
+      + '<div class="grid grid-cols-3 gap-2 pt-1">'
+        + '<button type="button" onclick="saveEdit(\'' + i + '\')" class="col-span-2 bg-emerald-600 hover:bg-emerald-500 p-2.5 text-xs font-black rounded-lg">SAVE CHANGES</button>'
+        + '<button type="button" onclick="removeListing(\'' + i + '\')" class="bg-slate-800 hover:bg-red-800 p-2.5 text-xs font-black rounded-lg">DELETE</button>'
+      + '</div>'
+
+    + '</div>';
+  }
+
+  list.innerHTML = out;
+}
+
+/* ============ BILLBOARD RENDER ============ */
+function renderDisplay() {
+  var vMode = document.getElementById('mode-vertical');
+  var hMode = document.getElementById('mode-horizontal');
+  var sMode = document.getElementById('mode-slide');
+  var empty = document.getElementById('empty-state');
+
+  [vMode, hMode, sMode].forEach(function (el) {
+    el.classList.add('hidden');
+    el.classList.remove('flex');
+  });
+  clearInterval(slideIntervalTimer);
+
+  if (activeInventory.length === 0) {
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  if (currentLayout === 'vertical') {
+    vMode.classList.remove('hidden');
+    vMode.classList.add('flex');
+    var vTrack = document.getElementById('vertical-scroll-track');
+    var vHtml = activeInventory.map(function (it) { return generateCardMarkup(it, 'vertical'); }).join('');
+    vTrack.innerHTML = vHtml + vHtml;
+  } else if (currentLayout === 'horizontal') {
+    hMode.classList.remove('hidden');
+    hMode.classList.add('flex');
+    var hTrack = document.getElementById('horizontal-scroll-track');
+    var hHtml = activeInventory.map(function (it) { return generateCardMarkup(it, 'horizontal'); }).join('');
+    hTrack.innerHTML = hHtml + hHtml;
+  } else {
+    sMode.classList.remove('hidden');
+    sMode.classList.add('flex');
+    runSlideShowEngine();
+  }
+}
+
+function generateCardMarkup(item, layout) {
+  var widthClass = (layout === 'horizontal')
+    ? 'w-80 md:w-96 flex-shrink-0'
+    : (layout === 'slide' ? 'w-full max-w-3xl mx-auto' : 'w-full');
+
+  var titleSize = (layout === 'slide') ? 'text-4xl md:text-6xl' : 'text-2xl md:text-3xl';
+  var priceSize = (layout === 'slide') ? 'text-7xl md:text-9xl' : 'text-5xl md:text-6xl';
+  var imgHeight = (layout === 'slide') ? 'h-64 md:h-80' : 'h-40 md:h-48';
+  var animClass = (layout === 'slide') ? ' slide-enter' : '';
+
+  var imgHtml = item.img
+    ? '<img src="' + item.img + '" alt="" class="w-full ' + imgHeight + ' object-cover rounded-xl mb-4 border-2 border-slate-700">'
+    : '';
+
+  var urgencyHtml = item.urgency
+    ? '<span class="pulse-urgent inline-block bg-red-600 text-white font-black px-3 py-1.5 rounded-lg text-sm md:text-lg uppercase tracking-wide">' + esc(item.urgency) + '</span>'
+    : '';
+
+  var qtyHtml = item.hasQty
+    ? '<span class="inline-block bg-slate-800 text-yellow-300 font-bold px-3 py-1.5 rounded-lg text-sm md:text-lg border border-yellow-600">&#128230; ONLY ' + item.qty + ' LEFT!</span>'
+ You're correct — my last message cut off again, this time mid-way through the admin edit panel markup inside `syncAndRenderAdmin()`. That unterminated JavaScript string is exactly why the Laptop View button does nothing: a syntax error anywhere in the script block prevents the *entire* script from parsing, so `initLaptopDisplay()` never gets defined.
+
+To stop this truncation problem permanently, I'm giving you the file in **two parts**. Part 1 is the HTML. Part 2 is the script. Paste Part 1 into your file, then paste Part 2 directly underneath it. Together they form the complete working file.
+
+---
+
+## PART 1 of 2 — HTML (paste this first)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#020617">
+<title>Car Boot Smart Display Suite</title>
+<script src="https://cdn.tailwindcss.com/3.4.5"></script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; }
+  #view-viewport { --scroll-speed: 20s; }
+  @keyframes marqueeVertical { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
+  @keyframes marqueeHorizontal { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+  .animate-scroll-v { animation: marqueeVertical var(--scroll-speed, 20s) linear infinite; }
+  .animate-scroll-h { animation: marqueeHorizontal var(--scroll-speed, 20s) linear infinite; }
+  .animate-scroll-v:hover, .animate-scroll-h:hover { animation-play-state: paused; }
+  @keyframes pulseUrgent { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .75; transform: scale(1.06); } }
+  .pulse-urgent { animation: pulseUrgent 1.1s ease-in-out infinite; }
+  @keyframes slideFadeIn { from { opacity: 0; transform: translateY(28px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .slide-enter { animation: slideFadeIn .55s cubic-bezier(.22,1,.36,1) both; }
+  .hidden { display: none !important; }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: #0f172a; }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+  input[type="range"] { -webkit-appearance: none; appearance: none; height: 28px; background: transparent; }
+  input[type="range"]::-webkit-slider-runnable-track { height: 8px; background: #1e293b; border-radius: 9999px; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; height: 26px; width: 26px; margin-top: -9px; background: #10b981; border-radius: 9999px; border: 3px solid #022c22; }
+  input[type="range"]::-moz-range-track { height: 8px; background: #1e293b; border-radius: 9999px; }
+  input[type="range"]::-moz-range-thumb { height: 22px; width: 22px; background: #10b981; border-radius: 9999px; border: 3px solid #022c22; }
+</style>
+</head>
+<body class="bg-slate-900 text-white font-sans overflow-x-hidden">
+
+  <div id="setup-screen" class="fixed inset-0 bg-slate-950 flex flex-col items-center justify-center z-50 p-6">
+  <div class="text-center max-w-md w-full">
+    <h1 class="text-4xl sm:text-5xl font-black mb-3 text-yellow-400 tracking-tight">&#128663; CAR BOOT SIGN</h1>
+    <p class="text-slate-400 mb-8 text-sm">Turn this device into an auto-scrolling billboard, or into your wireless phone control remote.</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <button type="button" onclick="initLaptopDisplay()" class="p-6 bg-blue-600 hover:bg-blue-500 active:scale-95 rounded-2xl shadow-xl transition-all">
+        <span class="text-4xl block mb-2">&#128187;</span>
+        <span class="font-bold text-lg block">Laptop View</span>
+        <span class="text-xs text-blue-200 block mt-1">Faces the customers</span>
+      </button>
+      <button type="button" onclick="initPhoneAdmin()" class="p-6 bg-emerald-600 hover:bg-emerald-500 active:scale-95 rounded-2xl shadow-xl transition-all">
+        <span class="text-4xl block mb-2">&#128241;</span>
+        <span class="font-bold text-lg block">Phone Remote</span>
+        <span class="text-xs text-emerald-200 block mt-1">Uploads your deals</span>
+      </button>
+    </div>
+    <p class="text-[10px] text-slate-600 mt-8">Open Laptop View first, then scan the QR with your phone.</p>
+  </div>
+</div>
+
+<div id="laptop-view" class="hidden min-h-screen flex-col justify-between bg-black relative">
+  <div id="pairing-overlay" class="absolute inset-0 bg-slate-950/98 flex flex-col items-center justify-center z-40 p-4">
+    <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl border-2 border-slate-800 text-center max-w-md shadow-2xl">
+      <h2 class="text-2xl font-bold mb-2 text-white">Pair Your Phone &#128242;</h2>
+      <p class="text-xs text-slate-400 mb-6">Scan with your phone camera, or type the ID into the phone manually.</p>
+      <div class="bg-white p-4 rounded-xl inline-block mb-4 min-h-[188px] min-w-[188px] flex items-center justify-center">
+        <div id="qrcode"></div>
+      </div>
+      <div class="text-[11px] text-slate-500 mb-1 uppercase tracking-wider font-bold">Display ID</div>
+      <div class="text-xs text-yellow-400 font-mono select-all bg-slate-950 p-2.5 rounded break-all" id="peer-id-display">Generating Secure ID...</div>
+      <div id="pair-net-warning" class="hidden mt-4 text-[11px] text-amber-300 bg-amber-950/60 border border-amber-800 rounded-lg p-2.5"></div>
+      <button type="button" onclick="dismissPairing()" class="mt-5 text-xs text-slate-500 hover:text-slate-300 underline">Hide this and show the board</button>
+    </div>
+  </div>
+  <div id="display-header" class="bg-yellow-400 text-slate-950 py-4 px-6 text-center font-black text-3xl md:text-5xl uppercase tracking-wider shrink-0">&#9889; CASH OR CARD ACCEPTED &#9889;</div>
+  <div id="view-viewport" class="flex-grow flex items-center justify-center overflow-hidden p-4 sm:p-6 relative">
+    <div id="mode-slide" class="hidden w-full max-w-5xl h-full items-center justify-center"><div id="slide-container" class="w-full"></div></div>
+    <div id="mode-vertical" class="hidden w-full max-w-4xl h-full overflow-hidden flex-col"><div id="vertical-scroll-track" class="flex flex-col gap-6 animate-scroll-v"></div></div>
+    <div id="mode-horizontal" class="hidden w-full h-full overflow-hidden items-center"><div id="horizontal-scroll-track" class="flex gap-6 animate-scroll-h"></div></div>
+    <div id="empty-state" class="text-slate-600 text-2xl md:text-3xl font-medium text-center px-6">Waiting for deals from your phone...</div>
+  </div>
+  <div id="display-footer" class="bg-red-600 text-white py-3 px-6 text-center font-bold text-xl md:text-2xl shrink-0">&#128165; DEALS CHANGING CONSTANTLY &mdash; ASK FOR BUNDLES! &#128165;</div>
+</div>
+
+<div id="phone-view" class="hidden min-h-screen bg-slate-900 p-4 pb-16 max-w-md mx-auto">
+  <header class="flex justify-between items-center mb-5 pb-4 border-b border-slate-800">
+    <div>
+      <h1 class="text-xl font-black text-emerald-400">Stall Command</h1>
+      <span id="conn-status" class="text-xs text-red-400 font-bold">&#9679; Disconnected</span>
+    </div>
+    <button type="button" onclick="hardReset()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-slate-400">Reset App</button>
+  </header>
+
+  <div id="manual-connect-card" class="bg-slate-950 p-4 rounded-xl border border-slate-800 mb-5">
+    <label for="target-peer-id" class="block text-xs font-semibold text-slate-400 mb-1.5">Enter Laptop Display ID:</label>
+    <div class="flex gap-2">
+      <input type="text" id="target-peer-id" autocomplete="off" autocapitalize="none" spellcheck="false" class="bg-slate-900 flex-grow min-w-0 px-3 py-2 rounded-lg font-mono text-sm border border-slate-700 text-white" placeholder="Paste Display ID">
+      <button type="button" onclick="connectToLaptop(null)" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg text-sm font-bold shrink-0">Link</button>
+    </div>
+  </div>
+
+  <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 mb-5 space-y-4">
+    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Display Layout &amp; Speed</h3>
+    <div class="grid grid-cols-3 gap-2">
+      <button type="button" onclick="changeLayout('slide')" id="btn-layout-slide" class="bg-slate-800 p-2 text-xs font-bold rounded-lg border-2 border-transparent">1 Big Deal</button>
+      <button type="button" onclick="changeLayout('vertical')" id="btn-layout-vertical" class="bg-slate-800 p-2 text-xs font-bold rounded-lg border-2 border-transparent">Vertical</button>
+      <button type="button" onclick="changeLayout('horizontal')" id="btn-layout-horizontal" class="bg-slate-800 p-2 text-xs font-bold rounded-lg border-2 border-transparent">Horizontal</button>
+    </div>
+    <div>
+      <label for="speed-slider" class="flex justify-between text-xs text-slate-400 mb-1">
+        <span>Scroll duration / slide hold:</span>
+        <span id="speed-val" class="font-bold text-emerald-400">20s</span>
+      </label>
+      <input type="range" id="speed-slider" min="5" max="45" step="1" value="20" oninput="updateSpeed(this.value)" class="w-full">
+    </div>
+    <div>
+      <label for="input-header" class="block text-xs text-slate-400 mb-1.5">Header Banner:</label>
+      <input type="text" id="input-header" value="&#9889; CASH OR CARD ACCEPTED &#9889;" oninput="sendBanners()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+    </div>
+    <div>
+      <label for="input-footer" class="block text-xs text-slate-400 mb-1.5">Footer Banner:</label>
+      <input type="text" id="input-footer" value="&#128165; DEALS CHANGING CONSTANTLY &mdash; ASK FOR BUNDLES! &#128165;" oninput="sendBanners()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-white">
+    </div>
+  </div>
+
+  <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 mb-5 space-y-4">
+    <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-400">Launch New Price Cut</h3>
+    <div>
+      <label for="item-title" class="block text-xs text-slate-400 mb-1.5">Item Title:</label>
+      <input type="text" id="item-title" placeholder="e.g. Retro Leather Jacket" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white">
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label for="item-was-price" class="block text-xs text-slate-400 mb-1.5">Was Price (&pound;):</label>
+        <input type="text" inputmode="decimal" id="item-was-price" placeholder="45" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white">
+      </div>
+      <div>
+        <label for="item-now-price" class="block text-xs text-yellow-400 font-bold mb-1.5">Now Price (&pound;):</label>
+        <input type="text" inputmode="decimal" id="item-now-price" placeholder="15" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm font-bold text-yellow-400">
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-3 items-end">
+      <div>
+        <label for="item-qty" class="block text-xs text-slate-400 mb-1.5">Quantity Stock:</label>
+        <input type="number" id="item-qty" min="1" step="1" value="1" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white">
+      </div>
+      <label class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-lg p-2.5 cursor-pointer">
+        <input type="checkbox" id="item-qty-toggle" checked class="w-4 h-4 accent-emerald-500 shrink-0">
+        <span class="text-xs text-slate-300">Show countdown</span>
+      </label>
+    </div>
+    <div>
+      <label class="block text-xs text-slate-400 mb-1.5">Photo:</label>
+      <div class="grid grid-cols-2 gap-2 mb-2">
+        <button type="button" onclick="document.getElementById('item-camera').click()" class="bg-slate-800 hover:bg-slate-700 p-2.5 text-xs font-bold rounded-lg">&#128247; Take Photo</button>
+        <button type="button" onclick="document.getElementById('item-library').click()" class="bg-slate-800 hover:bg-slate-700 p-2.5 text-xs font-bold rounded-lg">&#128444;&#65039; From Library</button>
+      </div>
+      <input type="file" id="item-camera" accept="image/*" capture="environment" class="hidden" onchange="previewPicked(this)">
+      <input type="file" id="item-library" accept="image/*" class="hidden" onchange="previewPicked(this)">
+      <div id="photo-preview-wrap" class="hidden items-center gap-3 bg-slate-900 border border-slate-700 rounded-lg p-2">
+        <img id="photo-preview" alt="" class="w-14 h-14 object-cover rounded-md border border-slate-700">
+        <span class="text-[11px] text-emerald-400 font-bold flex-grow">Photo ready</span>
+        <button type="button" onclick="clearPickedPhoto()" class="text-[11px] bg-slate-800 hover:bg-red-700 px-2.5 py-1.5 rounded-md font-bold">Remove</button>
+      </div>
+    </div>
+    <div>
+      <label for="item-urgency" class="block text-xs text-slate-400 mb-1.5">Urgency Messaging:</label>
+      <input type="text" id="item-urgency" placeholder="Optional hype tag" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white mb-2">
+      <div class="grid grid-cols-2 gap-2">
+        <button type="button" onclick="setUrgencyTemplate('ALMOST GONE!')" class="bg-slate-800 hover:bg-slate-700 p-2 text-xs font-bold rounded-lg">&#128293; Almost Gone</button>
+        <button type="button" onclick="setUrgencyTemplate('LAST ONE!')" class="bg-slate-800 hover:bg-slate-700 p-2 text-xs font-bold rounded-lg">&#9201;&#65039; Last One</button>
+        <button type="button" onclick="setUrgencyTemplate('TOP VALUE!')" class="bg-slate-800 hover:bg-slate-700 p-2 text-xs font-bold rounded-lg">&#128142; Top Value</button>
+        <button type="button" onclick="setUrgencyTemplate('MUST GO TODAY!')" class="bg-slate-800 hover:bg-slate-700 p-2 text-xs font-bold rounded-lg">&#128230; Must Go</button>
+      </div>
+    </div>
+    <button type="button" onclick="addDeal()" class="w-full bg-yellow-500 hover:bg-yellow-400 active:scale-95 text-slate-950 font-black py-3.5 rounded-xl text-base shadow-lg transition-all">&#10133; STREAM DEAL TO LAPTOP SCREEN</button>
+  </div>
+
+  <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 mb-5">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Live Active Listings</h3>
+      <span id="active-count" class="text-[10px] text-slate-600 font-bold"></span>
+    </div>
+    <div id="admin-inventory-list" class="space-y-2"></div>
+  </div>
+
+  <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 mb-5">
+    <div class="flex justify-between items-center mb-1">
+      <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">&#128181; Sold Today</h3>
+      <span id="sold-total" class="text-sm font-black text-emerald-400">&pound;0.00</span>
+    </div>
+    <p class="text-[10px] text-slate-600 mb-3">Tap any price to edit it if you bartered.</p>
+    <div id="sold-log-list" class="space-y-2"></div>
+    <div class="grid grid-cols-2 gap-2 mt-3">
+      <button type="button" onclick="exportSoldCsv()" class="bg-slate-800 hover:bg-slate-700 p-2.5 text-xs font-bold rounded-lg">&#11015;&#65039; Export CSV</button>
+      <button type="button" onclick="clearSoldLog()" class="bg-slate-800 hover:bg-red-800 p-2.5 text-xs font-bold rounded-lg">&#128465;&#65039; Clear Log</button>
+    </div>
+  </div>
+</div>
+<script>
+var peer=null,conn=null,currentLayout='vertical',scrollSpeed='20s';
+var activeInventory=[],soldLog=[],pickedPhotoData='',editingId=null;
+var slideIndex=0,slideIntervalTimer=null;
+var PEER_CONFIG={config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]}};
+
+function show(id){var e=document.getElementById(id);if(e)e.classList.remove('hidden');}
+function hide(id){var e=document.getElementById(id);if(e)e.classList.add('hidden');}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function money(n){return (n%1===0)?String(n):n.toFixed(2);}
+
+function guardLibraries(){
+  var m=[];
+  if(typeof Peer==='undefined'){m.push('PeerJS');}
+  if(typeof QRCode==='undefined'){m.push('QRCode.js');}
+  if(m.length){alert('Library failed to load: '+m.join(', ')+'. Connect to the internet once, reload, then you can go offline.');return false;}
+  return true;
+}
+
+function initLaptopDisplay(){
+  if(!guardLibraries()){return;}
+  hide('setup-screen');
+  var lv=document.getElementById('laptop-view');
+  lv.classList.remove('hidden');lv.classList.add('flex');
+  peer=new Peer(PEER_CONFIG);
+  peer.on('open',function(id){
+    document.getElementById('peer-id-display').innerText=id;
+    var url=window.location.origin+window.location.pathname+'?connectTo='+encodeURIComponent(id);
+    var h=document.getElementById('qrcode');h.innerHTML='';
+    new QRCode(h,{text:url,width:180,height:180,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+    if(window.location.protocol==='file:'){
+      var w=document.getElementById('pair-net-warning');
+      w.classList.remove('hidden');
+      w.innerText='Opened as a local file, so the QR link will not work. Host on GitHub Pages or type the ID manually.';
+    }
+  });
+  peer.on('connection',function(c){
+    conn=c;
+    conn.on('open',function(){hide('pairing-overlay');setupDataListener();});
+    conn.on('close',function(){show('pairing-overlay');});
+  });
+  peer.on('error',function(e){
+    document.getElementById('peer-id-display').innerText='Network error: '+e.type;
+    var w=document.getElementById('pair-net-warning');
+    w.classList.remove('hidden');
+    w.innerText='PeerJS error ('+e.type+'). This device needs internet for the initial handshake.';
+  });
+}
+
+function dismissPairing(){hide('pairing-overlay');}
+
+function initPhoneAdmin(){
+  if(!guardLibraries()){return;}
+  hide('setup-screen');
+  var pv=document.getElementById('phone-view');
+  pv.classList.remove('hidden');pv.classList.add('block');
+  var autoId=new URLSearchParams(window.location.search).get('connectTo');
+  peer=new Peer(PEER_CONFIG);
+  peer.on('open',function(){
+    if(autoId){
+      document.getElementById('target-peer-id').value=autoId;
+      setTimeout(function(){connectToLaptop(autoId);},600);
+    }
+  });
+  peer.on('error',function(e){setStatus('&#9679; Error: '+e.type,false);});
+  changeLayout(currentLayout);
+  syncAndRenderAdmin();
+}
+
+function setStatus(html,online){
+  var el=document.getElementById('conn-status');
+  if(!el){return;}
+  el.innerHTML=html;
+  el.className=online?'text-xs text-emerald-400 font-bold':'text-xs text-red-400 font-bold';
+}
+
+function connectToLaptop(targetId){
+  var id=targetId||document.getElementById('target-peer-id').value.trim();
+  if(!id){alert('Please enter or scan a valid Display ID.');return;}
+  if(!peer){alert('Network not ready. Wait two seconds and tap Link again.');return;}
+  setStatus('&#9679; Connecting...',false);
+  conn=peer.connect(id,{reliable:true});
+  conn.on('open',function(){
+    setStatus('&#9679; Connected to Display',true);
+    hide('manual-connect-card');
+    changeLayout(currentLayout);
+    updateSpeed(document.getElementById('speed-slider').value);
+    sendBanners();
+    syncAndRenderAdmin();
+  });
+  conn.on('close',function(){setStatus('&#9679; Disconnected',false);show('manual-connect-card');});
+  conn.on('error',function(){setStatus('&#9679; Link failed',false);});
+}
+
+function send(p){if(conn&&conn.open){conn.send(p);}}
+
+function hardReset(){
+  if(confirm('Reset the app? Export your sold log first if you need it.')){
+    window.location.href=window.location.origin+window.location.pathname;
+  }
+}
+
+function setupDataListener(){
+  conn.on('data',function(p){
+    if(!p||!p.type){return;}
+    if(p.type==='LAYOUT'){currentLayout=p.value;renderDisplay();}
+    else if(p.type==='SPEED'){
+      scrollSpeed=p.value;
+      document.getElementById('view-viewport').style.setProperty('--scroll-speed',scrollSpeed);
+      if(currentLayout==='slide'){renderDisplay();}
+    }
+    else if(p.type==='BANNERS'){
+      document.getElementById('display-header').textContent=p.header;
+      document.getElementById('display-footer').textContent=p.footer;
+    }
+    else if(p.type==='INVENTORY'){activeInventory=p.data||[];renderDisplay();}
+  });
+}
+
+function setUrgencyTemplate(t){document.getElementById('item-urgency').value=t;}
+
+function updateSpeed(v){
+  document.getElementById('speed-val').innerText=v+'s';
+  scrollSpeed=v+'s';
+  send({type:'SPEED',value:v+'s'});
+}
+
+function changeLayout(mode){
+  currentLayout=mode;
+  ['slide','vertical','horizontal'].forEach(function(m){
+    var b=document.getElementById('btn-layout-'+m);
+    if(!b){return;}
+    b.className=(m===mode)?'bg-emerald-600 p-2 text-xs font-bold rounded-lg border-2 border-white':'bg-slate-800 p-2 text-xs font-bold rounded-lg border-2 border-transparent';
+  });
+  send({type:'LAYOUT',value:mode});
+}
+
+function sendBanners(){
+  send({
+    type:'BANNERS',
+    header:document.getElementById('input-header').value,
+    footer:document.getElementById('input-footer').value
+  });
+}
+
+/* ===== PHOTO PICKING ===== */
+function previewPicked(input){
+  if(!input.files||!input.files[0]){return;}
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var im=new Image();
+    im.onload=function(){
+      var c=document.createElement('canvas');
+      var sc=Math.min(1,400/im.width);
+      c.width=Math.round(im.width*sc);
+      c.height=Math.round(im.height*sc);
+      c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+      pickedPhotoData=c.toDataURL('image/jpeg',0.6);
+      document.getElementById('photo-preview').src=pickedPhotoData;
+      var w=document.getElementById('photo-preview-wrap');
+      w.classList.remove('hidden');w.classList.add('flex');
+    };
+    im.onerror=function(){alert('Could not read that image, try another.');};
+    im.src=e.target.result;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function clearPickedPhoto(){
+  pickedPhotoData='';
+  var w=document.getElementById('photo-preview-wrap');
+  w.classList.add('hidden');w.classList.remove('flex');
+  document.getElementById('item-camera').value='';
+  document.getElementById('item-library').value='';
+}
+
+/* ===== ADD DEAL ===== */
+function addDeal(){
+  var t=document.getElementById('item-title').value.trim();
+  var n=document.getElementById('item-now-price').value.trim();
+  if(!t||!n){alert('Provide at least a title and a sale price.');return;}
+  activeInventory.push({
+    id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),
+    title:t,
+    wasPrice:document.getElementById('item-was-price').value.trim(),
+    nowPrice:n,
+    hasQty:document.getElementById('item-qty-toggle').checked,
+    qty:parseInt(document.getElementById('item-qty').value,10)||1,
+    urgency:document.getElementById('item-urgency').value.trim(),
+    img:pickedPhotoData
+  });
+  syncAndRenderAdmin();
+  document.getElementById('item-title').value='';
+  document.getElementById('item-was-price').value='';
+  document.getElementById('item-now-price').value='';
+  document.getElementById('item-urgency').value='';
+  document.getElementById('item-qty').value='1';
+  clearPickedPhoto();
+}
+
+/* ===== EDIT & MARKDOWN ===== */
+function findItem(id){
+  for(var i=0;i<activeInventory.length;i++){
+    if(activeInventory[i].id===id){return activeInventory[i];}
+  }
+  return null;
+}
+
+function toggleEdit(id){
+  editingId=(editingId===id)?null:id;
+  syncAndRenderAdmin();
+}
+
+function saveEdit(id){
+  var it=findItem(id);
+  if(!it){return;}
+  var nt=document.getElementById('ed-title-'+id).value.trim();
+  var nn=document.getElementById('ed-now-'+id).value.trim();
+  if(!nt||!nn){alert('Title and price cannot be blank.');return;}
+  it.title=nt;
+  it.nowPrice=nn;
+  it.wasPrice=document.getElementById('ed-was-'+id).value.trim();
+  it.urgency=document.getElementById('ed-urg-'+id).value.trim();
+  it.qty=parseInt(document.getElementById('ed-qty-'+id).value,10)||1;
+  it.hasQty=document.getElementById('ed-showqty-'+id).checked;
+  editingId=null;
+  syncAndRenderAdmin();
+}
+
+function applyMarkdown(id,amt){
+  var it=findItem(id);
+  if(!it){return;}
+  var cur=parseFloat(it.nowPrice);
+  if(isNaN(cur)){alert('Current price is not a number, edit it manually.');return;}
+  var next=Math.round((cur-amt)*100)/100;
+  if(next<=0){alert('That would take the price to zero or below.');return;}
+  if(!it.wasPrice){it.wasPrice=it.nowPrice;}
+  it.nowPrice=money(next);
+  if(!it.urgency){it.urgency='PRICE DROP!';}
+  syncAndRenderAdmin();
+}
+
+function customMarkdown(id){
+  var it=findItem(id);
+  if(!it){return;}
+  var raw=prompt('New price for "'+it.title+'" (\u00A3):',it.nowPrice);
+  if(raw===null){return;}
+  var v=parseFloat(raw);
+  if(isNaN(v)||v<=0){alert('Enter a valid number.');return;}
+  if(!it.wasPrice){it.wasPrice=it.nowPrice;}
+  it.nowPrice=money(v);
+  syncAndRenderAdmin();
+}
+
+/* ===== STOCK & SOLD ===== */
+function modifyStock(id,change){
+  var idx=-1;
+  for(var i=0;i<activeInventory.length;i++){
+    if(activeInventory[i].id===id){idx=i;break;}
+  }
+  if(idx===-1){return;}
+  var it=activeInventory[idx];
+  if(change<0){
+    var p=parseFloat(it.nowPrice)||0;
+    soldLog.push({
+      sid:Date.now().toString(36)+Math.random().toString(36).slice(2,7),
+      title:it.title,
+      price:p,
+      listed:p,
+      time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})
+    });
+    if(it.hasQty){
+      it.qty-=1;
+      if(it.qty<=0){activeInventory.splice(idx,1);if(editingId===id){editingId=null;}}
+    }else{
+      activeInventory.splice(idx,1);
+      if(editingId===id){editingId=null;}
+    }
+  }else if(it.hasQty){
+    it.qty+=1;
+  }
+  syncAndRenderAdmin();
+}
+
+function removeListing(id){
+  if(!confirm('Remove this listing without logging a sale?')){return;}
+  for(var i=0;i<activeInventory.length;i++){
+    if(activeInventory[i].id===id){activeInventory.splice(i,1);break;}
+  }
+  if(editingId===id){editingId=null;}
+  syncAndRenderAdmin();
+}
+
+/* ===== SOLD LOG ===== */
+function editSoldPrice(sid){
+  for(var i=0;i<soldLog.length;i++){
+    if(soldLog[i].sid===sid){
+      var raw=prompt('What did it actually sell for? (\u00A3)',soldLog[i].price);
+      if(raw===null){return;}
+      var v=parseFloat(raw);
+      if(isNaN(v)||v<0){alert('Enter a valid number.');return;}
+      soldLog[i].price=v;
+      renderSoldLog();
+      return;
+    }
+  }
+}
+
+function undoSold(sid){
+  for(var i=0;i<soldLog.length;i++){
+    if(soldLog[i].sid===sid){soldLog.splice(i,1);break;}
+  }
+  renderSoldLog();
+}
+
+function clearSoldLog(){
+  if(!confirm('Clear the entire sold list? This cannot be undone.')){return;}
+  soldLog=[];
+  renderSoldLog();
+}
+
+function exportSoldCsv(){
+  if(soldLog.length===0){alert('Nothing sold yet.');return;}
+  var rows=['Time,Item,Listed Price,Sold Price'];
+  var total=0;
+  soldLog.forEach(function(s){
+    total+=s.price;
+    rows.push([s.time,'"'+String(s.title).replace(/"/g,'""')+'"',s.listed.toFixed(2),s.price.toFixed(2)].join(','));
+  });
+  rows.push(',,TOTAL,'+total.toFixed(2));
+  var blob=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='carboot-sales-'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},1500);
+}
+
+function renderSoldLog(){
+  var box=document.getElementById('sold-log-list');
+  if(!box){return;}
+  var total=0;
+  soldLog.forEach(function(s){total+=s.price;});
+  document.getElementById('sold-total').innerHTML='&pound;'+total.toFixed(2);
+  if(soldLog.length===0){
+    box.innerHTML='<p class="text-xs text-slate-600 italic py-3 text-center">Nothing sold yet today.</p>';
+    return;
+  }
+  box.innerHTML=soldLog.slice().reverse().map(function(s){
+    var bart=(s.price!==s.listed)?'<span class="text-[10px] text-amber-400 shrink-0">(was &pound;'+s.listed.toFixed(2)+')</span>':'';
+    return '<div class="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-lg p-2.5">'+
+      '<span class="text-[10px] text-slate-500 font-mono shrink-0">'+s.time+'</span>'+
+      '<span class="text-xs text-white truncate flex-grow">'+esc(s.title)+'</span>'+
+      bart+
+      '<button type="button" onclick="editSoldPrice(\''+s.sid+'\')" class="text-sm font-black text-emerald-400 underline decoration-dotted shrink-0">&pound;'+s.price.toFixed(2)+'</button>'+
+      '<button type="button" onclick="undoSold(\''+s.sid+'\')" class="text-[11px] bg-slate-800 hover:bg-red-800 px-2 py-1 rounded font-bold shrink-0">&#8630;</button>'+
       '</div>';
+  }).join('');
+}
 
-    if (!open) { return row; }
+/* ===== ADMIN RENDER ===== */
+function syncAndRenderAdmin(){
+  send({type:'INVENTORY',data:activeInventory});
+  renderSoldLog();
+  var list=document.getElementById('admin-inventory-list');
+  if(!list){return;}
+  var cnt=document.getElementById('active-count');
+  if(cnt){cnt.innerText=activeInventory.length+' live';}
+  if(activeInventory.length===0){
+    list.innerHTML='<p class="text-xs text-slate-600 italic py-3 text-center">No active products on screen yet.</p>';
+    return;
+  }
+  list.innerHTML=activeInventory.map(function(item){
+    var i=item.id;
+    var open=(editingId===i);
+    var wasBit=item.wasPrice?'<span class="text-[11px] text-slate-500 line-through ml-1">&pound;'+esc(item.wasPrice)+'</span>':'';
+    var thumb=item.img?'<img src="'+item.img+'" alt="" class="w-11 h-11 object-cover rounded-md border border-slate-700 shrink-0">':'';
+    var row='<div class="flex items-center gap-2 bg-slate-900 border border-slate-800 p-2.5 '+(open?'rounded-t-lg':'rounded-lg')+'">'+
+      thumb+
+      '<div class="flex-grow min-w-0">'+
+        '<div class="text-sm font-bold text-white truncate">'+esc(item.title)+'</div>'+
+        '<div class="text-xs"><span class="text-yellow-400 font-bold">&pound;'+esc(item.nowPrice)+'</span>'+wasBit+'</div>'+
+        '<div class="text-[10px] text-slate-500 mt-0.5">'+(item.hasQty?'Stock: '+item.qty:'Infinite display')+'</div>'+
+      '</div>'+
+      '<div class="flex flex-col gap-1 shrink-0">'+
+        '<button type="button" onclick="modifyStock(\''+i+'\',-1)" class="bg-red-600 hover:bg-red-500 px-2.5 py-1.5 rounded-md text-[11px] font-black">SOLD</button>'+
+        '<button type="button" onclick="toggleEdit(\''+i+'\')" class="bg-slate-700 hover:bg-slate-600 px-2.5 py-1.5 rounded-md text-[11px] font-black">'+(open?'CLOSE':'EDIT')+'</button>'+
+      '</div>'+
+    '</div>';
+    if(!open){return row;}
+    return row+'<div class="bg-slate-900 border border-t-0 border-slate-800 rounded-b-lg p-3 space-y-2.5">'+
+      '<div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Quick markdown</div>'+
+      '<div class="grid grid-cols-4 gap-1.5">'+
+        '<button type="button" onclick="applyMarkdown(\''+i+'\',1)" class="bg-amber-600 hover:bg-amber-500 p-2 text-[11px] font-black rounded-md">-&pound;1</button>'+
+        '<button type="button" onclick="applyMarkdown(\''+i+'\',2)" class="bg-amber-600 hover:bg-amber-500 p-2 text-[11px] font-black rounded-md">-&pound;2</button>'+
+        '<button type="button" onclick="applyMarkdown(\''+i+'\',5)" class="bg-amber-600 hover:bg-amber-500 p-2 text-[11px] font-black rounded-md">-&pound;5</button>'+
+        '<button type="button" onclick="customMarkdown(\''+i+'\')" class="bg-slate-700 hover:bg-slate-600 p-2 text-[11px] font-black rounded-md">Set</button>'+
+      '</div>'+
+      '<div><label class="block text-[10px] text-slate-500 mb-1">Title</label>'+
+        '<input type="text" id="ed-title-'+i+'" value="'+esc(item.title)+'" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white"></div>'+
+      '<div class="grid grid-cols-2 gap-2">'+
+        '<div><label class="block text-[10px] text-slate-500 mb-1">Was &pound;</label>'+
+          '<input type="text" inputmode="decimal" id="ed-was-'+i+'" value="'+esc(item.wasPrice)+'" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white"></div>'+
+        '<div><label class="block text-[10px] text-yellow-400 font-bold mb-1">Now &pound;</label>'+
+          '<input type="text" inputmode="decimal" id="ed-now-'+i+'" value="'+esc(item.nowPrice)+'" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm font-bold text-yellow-400"></div>'+
+      '</div>'+
+      '<div><label class="block text-[10px] text-slate-500 mb-1">Urgency tag</label>'+
+        '<input type="text" id="ed-urg-'+i+'" value="'+esc(item.urgency)+'" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white"></div>'+
+      '<div class="grid grid-cols-2 gap-2 items-end">'+
+        '<div><label class="block text-[10px] text-slate-500 mb-1">Stock qty</label>'+
+          '<input type="number" min="1" step="1" id="ed-qty-'+i+'" value="'+item.qty+'" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white"></div>'+
+        '<label class="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-lg p-2 cursor-pointer">'+
+          '<input type="checkbox" id="ed-showqty-'+i+'"'+(item.hasQty?' checked':'')+' class="w-4 h-4 accent-emerald-500 shrink-0">'+
+          '<span class="text-[11px] text-slate-300">Show countdown</span></label>'+
+      '</div>'+
+      '<div class="grid grid-cols-2 gap-2 pt-1">'+
+        '<button type="button" onclick="saveEdit(\''+i+'\')" class="bg-emerald-600 hover:bg-emerald-500 p-2.5 text-xs font-black rounded-lg">SAVE CHANGES</button>'+
+        '<button type="button" onclick="removeListing(\''+i+'\')" class="bg-slate-800 hover:bg-red-800 p-2.5 text-xs font-black rounded-lg">DELETE</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
 
-    return row +
-      '<div class="bg-slate-900 border border-t-0 border-slate-800 rounded-b-lg p-3 space-y-2.5">' +
+/* ===== BILLBOARD RENDER ===== */
+function renderDisplay(){
+  var v=document.getElementById('mode-vertical');
+  var h=document.getElementById('mode-horizontal');
+  var s=document.getElementById('mode-slide');
+  var empty=document.getElementById('empty-state');
+  [v,h,s].forEach(function(el){el.classList.add('hidden');el.classList.remove('flex');});
+  clearInterval(slideIntervalTimer);
+  if(activeInventory.length===0){empty.classList.remove('hidden');return;}
+  empty.classList.add('hidden');
+  if(currentLayout==='vertical'){
+    v.classList.remove('hidden');v.classList.add('flex');
+    var vt=document.getElementById('vertical-scroll-track');
+    var vh=activeInventory.map(function(i){return cardMarkup(i,'vertical');}).join('');
+    vt.innerHTML=vh+vh;
+  }else if(currentLayout==='horizontal'){
+    h.classList.remove('hidden');h.classList.add('flex');
+    var ht=document.getElementById('horizontal-scroll-track');
+    var hh=activeInventory.map(function(i){return cardMarkup(i,'horizontal');}).join('');
+    ht.innerHTML=hh+hh;
+  }else{
+    s.classList.remove('hidden');s.classList.add('flex');
+    runSlideShow();
+  }
+}
 
-        '<div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Quick markdown</div>' +
-        '<div class="grid grid-cols-4 gap-1.5">' +
-          '<button type="button" onclick="applyMarkdown(\'' + i + '\', 1)" class="bg-amber-600 hover:bg-amber-500 p-2 text-[11px] font-black rounded-md">-&pound;1</button>' +
-          '<button type="button" onclick="applyMarkdown(\'' + i + '\', 2)" class="bg-amber-600 hover:bg-amber-500 p-2 text-[11px] font-black rounded-md">-&pound;2</button>' +
-          '<button type="button" onclick="applyMarkdown(\'' + i + '\', 5)" class="bg-amber-600 hover:bg-amber-500 p-2 text-[11px] font-black rounded-md">-&pound;5</button>' +
-          '<button type="button" onclick="customMarkdown(\'' + i + '\')" class="bg-slate-700 hover:bg-slate-600 p-2 text-[11px] font-black rounded-md">Set&hellip;</button>' +
-        '</div>' +
+function cardMarkup(item,layout){
+  var w=(layout==='horizontal')?'w-80 md:w-96 flex-shrink-0':(layout==='slide'?'w-full max-w-3xl mx-auto':'w-full');
+  var ts=(layout==='slide')?'text-4xl md:text-6xl':'text-2xl md:text-3xl';
+  var ps=(layout==='slide')?'text-7xl md:text-9xl':'text-5xl md:text-6xl';
+  var ih=(layout==='slide')?'h-64 md:h-80':'h-40 md:h-48';
+  var anim=(layout==='slide')?' slide-enter':'';
+  var img=item.img?'<img src="'+item.img+'" alt="" class="w-full '+ih+' object-cover rounded-xl mb-4 border-2 border-slate-700">':'';
+  var urg=item.urgency?'<span class="pulse-urgent inline-block bg-red-600 text-white font-black px-3 py-1.5 rounded-lg text-sm md:text-lg uppercase">'+esc(item.urgency)+'</span>':'';
+  var qty=item.hasQty?'<span class="inline-block bg-slate-800 text-yellow-300 font-bold px-3 py-1.5 rounded-lg text-sm md:text-lg border border-yellow-600">ONLY '+item.qty+' LEFT!</span>':'';
+  var tags=(urg||qty)?'<div class="flex flex-wrap gap-2 justify-center mb-3">'+urg+qty+'</div>':'';
+  var was=item.wasPrice?'<span class="text-2xl md:text-4xl text-slate-500 line-through font-bold">&pound;'+esc(item.wasPrice)+'</span>':'';
+  return '<div class="'+w+anim+' bg-slate-900 border-4 border-yellow-400 rounded-3xl p-5 md:p-7 shadow-2xl text-center">'+
+    img+tags+
+    '<h2 class="'+ts+' font-black text-white leading-tight mb-3 uppercase">'+esc(item.title)+'</h2>'+
+    '<div class="flex items-baseline justify-center gap-4 flex-wrap">'+
+      '<span class="'+ps+' font-black text-yellow-400 leading-none">&pound;'+esc(item.nowPrice)+'</span>'+was+
+    '</div></div>';
+}
 
-        '<div><label class="block text-[10px] text-slate-500 mb-1">Title</label>' +
-          '<input type="text" id="ed-title-' + i + '" value="' + esc(item.title) + '" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white"></div>' +
+function runSlideShow(){
+  var sc=document.getElementById('slide-container');
+  function next(){
+    if(activeInventory.length===0){return;}
+    if(slideIndex>=activeInventory.length){slideIndex=0;}
+    sc.innerHTML=cardMarkup(activeInventory[slideIndex],'slide');
+    slideIndex++;
+  }
+  next();
+  var ms=(parseFloat(scrollSpeed)||20)*1000;
+  slideIntervalTimer=setInterval(next,ms);
+}
 
-        '<div class="grid grid-cols-2 gap-2">' +
-          '<div><label class="block text-[10px] text-slate-500 mb-1">Was &pound;</label>' +
-            '<input type="text" inputmode="decimal" id="ed-was-' + i + '" value="' + esc(item.wasPrice) + '" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-white"></div>' +
-          '<div><label class="block text-[10px] text-yellow-400 font-bold mb-1">Now &pound;</label>' +
-            '<input type="text" inputmode="decimal" id="ed
+/* ===== AUTO ROUTE ===== */
+(function(){
+  if(new URLSearchParams(window.location.search).has('connectTo')){
+    if(document.readyState==='loading'){
+      document.addEventListener('DOMContentLoaded',initPhoneAdmin);
+    }else{
+      initPhoneAdmin();
+    }
+  }
+})();
+</script>
+
+</body>
+</html>
