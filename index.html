@@ -204,4 +204,68 @@
       <div class="grid grid-cols-2 gap-2">
         <button type="button" onclick="setUrgencyTemplate('&#128293; ALMOST GONE!')" class="bg-slate-800 hover:bg-slate-700 p-2 text-xs font-bold rounded-lg">&#128293; Almost Gone</button>
         <button type="button" onclick="setUrgencyTemplate('&#9201;&#65039; LAST ONE!')" class="bg-slate-800 hover:bg-slate-700 p-2 text-xs font-bold rounded-lg">&#9201;&#65039; Last One</button>
-        <button type="button" onclick="setUrgencyTemplate('&#128142; TOP VALUE!')" class="
+        <button type="button" onclick="setUrgencyTemplate('&#128142; TOP VALUE!')"         <button type="button" onclick="setUrgencyTemplate('&#128142; TOP VALUE!')" class="bg-slate-800 hover:bg-slate-700 p-2 text-xs font-bold rounded-lg">&#128142; Top Value</button>
+        <button type="button" onclick="setUrgencyTemplate('&#128230; MUST GO TODAY!')" class="bg-slate-800 hover:bg-slate-700 p-2 text-xs font-bold rounded-lg">&#128230; Must Go</button>
+      </div>
+    </div>
+
+    <button type="button" onclick="addDeal()" class="w-full bg-yellow-500 hover:bg-yellow-400 active:scale-95 text-slate-950 font-black py-3.5 rounded-xl text-base shadow-lg transition-all">
+      &#10133; STREAM DEAL TO LAPTOP SCREEN
+    </button>
+  </div>
+
+  <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Live Active Listings</h3>
+    <div id="admin-inventory-list" class="space-y-2">
+      <p class="text-xs text-slate-600 italic py-3 text-center">No active products on screen yet.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+var peer = null;
+var conn = null;
+var currentLayout = 'vertical';
+var scrollSpeed = '20s';
+var activeInventory = [];
+var slideIndex = 0;
+var slideIntervalTimer = null;
+
+var PEER_CONFIG = {
+  config: {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' }
+    ]
+  }
+};
+
+function show(id)  { var e = document.getElementById(id); if (e) e.classList.remove('hidden'); }
+function hide(id)  { var e = document.getElementById(id); if (e) e.classList.add('hidden'); }
+
+function guardLibraries() {
+  var missing = [];
+  if (typeof Peer === 'undefined')   { missing.push('PeerJS'); }
+  if (typeof QRCode === 'undefined') { missing.push('QRCode.js'); }
+  if (missing.length) {
+    alert('Required library did not load: ' + missing.join(', ') +
+          '\n\nThis device needs internet access the FIRST time to cache the libraries. ' +
+          'Connect to Wi-Fi or mobile data, reload once, then you can go offline.');
+    return false;
+  }
+  return true;
+}
+
+/* ---------------- LAPTOP ---------------- */
+function initLaptopDisplay() {
+  if (!guardLibraries()) { return; }
+  hide('setup-screen');
+  var lv = document.getElementById('laptop-view');
+  lv.classList.remove('hidden');
+  lv.classList.add('flex');
+
+  peer = new Peer(PEER_CONFIG);
+
+  peer.on('open', function (id) {
+    document.getElementById('peer-id-display').innerText = id;
+
