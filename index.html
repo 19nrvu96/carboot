@@ -139,6 +139,13 @@
 var peer=null,conn=null,layout='vertical',speed='20s',inv=[],sold=[],photo='',editId=null,sIdx=0,sTimer=null;
 var RETRY=null,LASTID='';
 var CFG={config:{iceServers:[
+{urls:'stun:stun.relay.metered.ca:80'},
+{urls:'turn:carboot.metered.live:80',username:'1d33cf0c6f80bcecf36ea860',credential:'NP/jlgncVtBnQd4c'},
+{urls:'turn:carboot.metered.live:80?transport=tcp',username:'1d33cf0c6f80bcecf36ea860',credential:'NP/jlgncVtBnQd4c'},
+{urls:'turn:carboot.metered.live:443',username:'1d33cf0c6f80bcecf36ea860',credential:'NP/jlgncVtBnQd4c'},
+{urls:'turns:carboot.metered.live:443?transport=tcp',username:'1d33cf0c6f80bcecf36ea860',credential:'NP/jlgncVtBnQd4c'}
+],iceCandidatePoolSize:10}};
+{config:{iceServers:[
 {urls:'stun:stun.l.google.com:19302'},
 {urls:'stun:stun1.l.google.com:19302'},
 {urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
