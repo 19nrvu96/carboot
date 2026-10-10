@@ -140,17 +140,10 @@ var peer=null,conn=null,layout='vertical',speed='20s',inv=[],sold=[],photo='',ed
 var RETRY=null,LASTID='';
 var CFG={config:{iceServers:[
 {urls:'stun:stun.relay.metered.ca:80'},
-{urls:'turn:carboot.metered.live:80',username:'1d33cf0c6f80bcecf36ea860',credential:'NP/jlgncVtBnQd4c'},
-{urls:'turn:carboot.metered.live:80?transport=tcp',username:'1d33cf0c6f80bcecf36ea860',credential:'NP/jlgncVtBnQd4c'},
-{urls:'turn:carboot.metered.live:443',username:'1d33cf0c6f80bcecf36ea860',credential:'NP/jlgncVtBnQd4c'},
-{urls:'turns:carboot.metered.live:443?transport=tcp',username:'1d33cf0c6f80bcecf36ea860',credential:'NP/jlgncVtBnQd4c'}
-],iceCandidatePoolSize:10}};
-{config:{iceServers:[
-{urls:'stun:stun.l.google.com:19302'},
-{urls:'stun:stun1.l.google.com:19302'},
-{urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
-{urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},
-{urls:'turn:openrelay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'}
+{urls:'turn:global.relay.metered.ca:80',username:'1d33cf0c6f80bcecf36ea860',credential:'NP/jlgncVtBnQd4c'},
+{urls:'turn:global.relay.metered.ca:80?transport=tcp',username:'1d33cf0c6f80bcecf36ea860',credential:'NP/jlgncVtBnQd4c'},
+{urls:'turn:global.relay.metered.ca:443',username:'1d33cf0c6f80bcecf36ea860',credential:'NP/jlgncVtBnQd4c'},
+{urls:'turns:global.relay.metered.ca:443?transport=tcp',username:'1d33cf0c6f80bcecf36ea860',credential:'NP/jlgncVtBnQd4c'}
 ],iceCandidatePoolSize:10}};
 function $(i){return document.getElementById(i)}
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
@@ -159,6 +152,8 @@ function send(p){if(conn&&conn.open)conn.send(p)}
 function guard(){if(typeof Peer==='undefined'||typeof QRCode==='undefined'){alert('Libraries failed to load. Connect to the internet, reload once.');return false}return true}
 function pk(ok){var e=$('pkstat');if(!e)return;e.innerHTML=ok?'&#9679; LINKED':'&#9679; WAITING';e.className=ok?'text-[10px] font-bold shrink-0 text-emerald-400':'text-[10px] font-bold shrink-0 text-red-400'}
 function initLaptop(){
+if(!guard())return;
+try{new RTCPeerConnection(CFG.config)}catch(err){alert('Bad TURN config: '+err.message+'\n\nCheck you replaced carboot.metered.live / 1d33cf0c6f80bcecf36ea860 with real values.');return}
 if(!guard())return;
 $('setup').classList.add('hidden');$('laptop').classList.remove('hidden');$('laptop').classList.add('flex');
 var saved=null;try{saved=localStorage.getItem('cbsid')}catch(e){}
@@ -172,7 +167,16 @@ $('pkqr').innerHTML='';new QRCode($('pkqr'),{text:u,width:54,height:54,correctLe
 pk(0);});
 peer.on('connection',function(c){conn=c;c.on('open',function(){$('pairbox').classList.add('hidden');pk(1);listen()});c.on('close',function(){pk(0)})});
 peer.on('error',function(e){
-if(e.type==='unavailable-id'){try{localStorage.removeItem('cbsid')}catch(x){}location.reload();return}
+if(e.type==='unavailable-id'){try{localStorage.removeItem('cbsid')}catch(x){}
+try{peer.destroy()}catch(x){}
+peer=new Peer(CFG);
+peer.on('open',function(id){try{localStorage.setItem('cbsid',id)}catch(y){}
+$('pid').innerText=id;$('pkid').innerText=id;
+var u=location.origin+location.pathname+'?c='+encodeURIComponent(id);
+$('qrcode').innerHTML='';new QRCode($('qrcode'),{text:u,width:180,height:180,correctLevel:QRCode.CorrectLevel.M});
+$('pkqr').innerHTML='';new QRCode($('pkqr'),{text:u,width:54,height:54,correctLevel:QRCode.CorrectLevel.L});pk(0)});
+peer.on('connection',function(c){conn=c;c.on('open',function(){$('pairbox').classList.add('hidden');pk(1);listen()});c.on('close',function(){pk(0)})});
+return}
 if(e.type==='peer-unavailable')return;
 $('pid').innerText='Error: '+e.type;$('pwarn').classList.remove('hidden');$('pwarn').innerText='PeerJS error ('+e.type+').';});
 peer.on('disconnected',function(){pk(0);try{peer.reconnect()}catch(e){}});}
